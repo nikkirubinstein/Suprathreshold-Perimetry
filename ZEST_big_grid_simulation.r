@@ -14,22 +14,22 @@ TT <- matrix(c(
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  2, NA, NA,  2,    2, NA, NA,  2, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  2, NA, NA, NA,   NA, NA, NA,  2, NA,  3, NA,  3, NA,  4, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA, NA, NA,   NA, NA, NA, NA,  2, NA,  2, NA,  3, NA,  3, NA,  4, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  2, NA,  1, NA,  2, NA,  3, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA,  4, NA,  2, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  2, NA,  3, NA,  3, NA, NA,  4, NA,
-  NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  2, NA,  3, NA, NA,  3, NA, NA,  4,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA, NA,  30,    30, NA, NA,  30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA, NA, NA,   NA, NA, NA,  30, NA,  3, NA,  3, NA,  30, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA,   NA, NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA,  30, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  30, NA,  1, NA,  30, NA,  3, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA,  30, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA,  3, NA, NA,  30, NA,
+  NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA, NA,  3, NA, NA,  30,
                          
-  NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  2, NA,  3, NA, NA,  3, NA, NA,  4,
-  NA, NA, NA, NA, NA, NA,  4, NA,  2, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  2, NA,  3, NA,  3, NA, NA,  4, NA,
-  NA, NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  2, NA,  2, NA,  3, NA,  3, NA,  4, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA,   NA, NA, NA, NA,  2, NA,  1, NA,  2, NA,  3, NA,  4, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA, NA,   NA, NA, NA,  2, NA,  2, NA,  3, NA,  3, NA, NA, NA,  4, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  2, NA, NA,   NA, NA,  2, NA,  2, NA, NA, NA, NA, NA,  3, NA,  4, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA, NA,  2,    2, NA, NA,  3, NA, NA,  3, NA,  4, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA,  4,    4, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
+  NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA, NA,  3, NA, NA,  30,
+  NA, NA, NA, NA, NA, NA,  30, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA,  3, NA, NA,  30, NA,
+  NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA,  30, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA,   NA, NA, NA, NA,  30, NA,  1, NA,  30, NA,  3, NA,  30, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA,   NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA, NA, NA,  30, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA,   NA, NA,  30, NA,  30, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA, NA,  30,    30, NA, NA,  3, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA,  30, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA,  30,    30, NA,  30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
 ), nrow=18, ncol=30, byrow=TRUE)
 
 #TT <- matrix(c(

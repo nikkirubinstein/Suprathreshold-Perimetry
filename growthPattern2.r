@@ -57,7 +57,9 @@
 #   FNSize  - size of FN stimulus (diameter in mm)
 #   initialRespWin - starting response window in ms 
 #   respWinBuffer  - time added to mean of respWin to determine final response Window
-#
+#   catchTrialLoadFreq - Frequency of catch trials in the first minute. Usually more frequent in order to front load.
+#   catchTrialFreq - Frequency of catch trials for the remainder of the test
+#   catchTrialMax - Maximum number of FP and FN catch trials for the test (e.g. if catchTrialMAx = 5, will result in 5 FP and 5 FN catch trials)
 #
 # RETURNS: list of two matrices, each with same dimensions as gp
 #           t is final threshold at each location
@@ -67,7 +69,9 @@
 require("audio")
 
 procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, stopFun, finalFun,gridPat,
-        catchTrialFreq=15,
+        catchTrialLoadFreq=9,
+        catchTrialFreq=30,
+        catchTrialMax=5,
         FPLevel=dbTocd(55, 4000/pi),
         FNDelta=10,
         FNPause=500,
@@ -244,7 +248,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     while (length(locs) > 0 && gRunning) {
         applyUndos()
       
-        if ((counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 != 0)) {
+        if ((counter <= 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 != 0)) ||
+            (counter > 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 != 0))) {
 
             result <- presentCatch("POS", mean(respWin) + respWinBuffer, currentThresholds, states)
             
@@ -263,7 +268,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             counter <- counter + 1
         }
         
-        if (((counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE)){
+        if ((counter <= 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE)) ||
+            (counter > 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE))){
           
           result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states)
           Sys.sleep(FNPause/1000)

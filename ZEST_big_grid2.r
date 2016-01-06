@@ -260,7 +260,6 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, onePriors, startF, stepF, stopF, finalF,
             gridPat=growthPattern,
             respWinBuffer=250,
-            catchTrialFreq = 15,
             FPLevel=dbTocd(55, 4000/pi), 
             FNDelta=10,
             FNPause=500,
@@ -316,7 +315,8 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
       res2 <- procedureWithGrowthPattern(details$startTime,outliers, outlierPriors, startF, stepF, stopF, finalF, 
             gridPat=growthPattern,
             respWinBuffer=250,
-            catchTrialFreq = 5000,
+            catchTrialLoadFreq = 5000,
+            catchTrialFreq=5000,
             FPLevel=dbTocd(55, 4000/pi), 
             FNDelta=10,
             FNPause=500,
@@ -473,8 +473,8 @@ setPSV <- function (grid,size) {
         else if (size == "V") {PSV <- 33} 
           else {PSV <- 30}
   } else if (grid == "Peripheral") {
-      if (size == "III") {PSV <- 31} 
-        else if (size == "V") {PSV <- 32} 
+      if (size == "V") {PSV <- 31} 
+        else if (size == "VI") {PSV <- 32} 
           else {PSV <- 30} 
   } else {
     PSV <- 30
