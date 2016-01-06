@@ -32,49 +32,49 @@ TT <- matrix(c(
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA,  4,    4, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
 ), nrow=18, ncol=30, byrow=TRUE)
 
-TT <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 0,   30, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 10, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
-  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
+#TT <- matrix(c(
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 0,   30, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 10, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
+#  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
                          
-  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
-  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
-  NA, NA, NA, NA, NA, NA, NA, 30, NA, 10, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, 30, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,   NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 30,   30, NA, NA, 30, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30,   0, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=18, ncol=30, byrow=TRUE)
+#  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
+#  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
+#  NA, NA, NA, NA, NA, NA, NA, 30, NA, 10, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, 30, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,   NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 30,   30, NA, NA, 30, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30,   0, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
+#), nrow=18, ncol=30, byrow=TRUE)
 
-TT <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25, 1,  2,  1, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  25,  2, NA,  2, NA, NA,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2, 2,  1, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  20,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=19, ncol=31, byrow=TRUE) 
+#TT <- matrix(c(
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25, 1,  2,  1, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  25,  2, NA,  2, NA, NA,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2, 2,  1, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  20,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
+#), nrow=19, ncol=31, byrow=TRUE) 
 #print(z<-Zest242(eye="right", primaryStartValue=25, gridType="Peripheral", tt=ttt))
 
 #tt <- matrix(c(  # for Tester
@@ -139,6 +139,7 @@ while (details$practice == TRUE) {
 details <- inputs()
 if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
 np <- NULL
+PSV <- setPSV(details$grid,details$stimSizeRoman)
 #trials <- 500
 #for ( i in 1:trials) {
 #print(i)
@@ -146,7 +147,7 @@ np <- NULL
 if (details$eye == "left") {
   tt <- grid.flip(tt)
 }
-  z<-Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierFreq=2,interStimInterval=c(0,0), tt=TT)
+  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierFreq=2,interStimInterval=c(0,0), tt=TT)
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()

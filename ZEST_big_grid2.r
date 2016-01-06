@@ -39,6 +39,7 @@
 #         18 Aug 2015: output files are saved in separate folders based on diagnosis
 #         20 Aug 2015: Added new button when test paused, allowing termination of test without saving.
 #         22 Aug 2015: Added new function where you can pause and delete the most recent presentations
+#          1 Jan 2015: customized primary start value of BM priors based on MW normal data
 
 rm(list=ls()) 
 source("growthPattern2.r")
@@ -246,14 +247,14 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
         }
         return(finalF(state.fovea)[1])   
       }
-      opiSetBackground(fixation=.Octopus900Env$FIX_CROSS)
+      #opiSetBackground(fixation=.Octopus900Env$FIX_CROSS)
       pauseAtStartFovea() 
       fovealTH <- resFovea()
       fovealTestComplete(fovealTH)
     }
     
     windows(700,250)
-    opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE)
+    #opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE)
     pauseAtStart()
     commence <<- Sys.time()
     res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, onePriors, startF, stepF, stopF, finalF,
@@ -460,6 +461,28 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
 }
 
 ###########################################################################################
+# Function which sets the primary start value for BM priors
+# depending on test pattern/target size combination.
+#
+###########################################################################################
+setPSV <- function (grid,size) {
+  if ((grid == "30-1") && (size == "V")) {
+    PSV <- 33
+  } else if (grid == "30-2") {
+      if (size == "III") {PSV <- 28} 
+        else if (size == "V") {PSV <- 33} 
+          else {PSV <- 30}
+  } else if (grid == "Peripheral") {
+      if (size == "III") {PSV <- 31} 
+        else if (size == "V") {PSV <- 32} 
+          else {PSV <- 30} 
+  } else {
+    PSV <- 30
+  }
+  return(PSV)
+}
+
+###########################################################################################
 # Function which writes a .csv file in a format that can be used in the "visualFields"
 # package
 #
@@ -540,57 +563,59 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
 ####################################
 # Example Usage
 ####################################
-require(OPI)
-chooseOpi("Octopus900")
-source("query_patient_details.r")
+#require(OPI)
+#chooseOpi("Octopus900")
+#source("query_patient_details.r")
 
-gRunning <- TRUE
+#gRunning <- TRUE
 
-details <- practiceQuery()
+#details <- practiceQuery()
 
-while (details$practice == TRUE) {
-  gRunning <- TRUE
-  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
-  tkdestroy(tt)
-  pracTestComplete()
-  dev.off()
-  details <- practiceQuery()
-  opiClose()
-}
+#while (details$practice == TRUE) {
+#  gRunning <- TRUE
+#  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+#  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
+#  tkdestroy(tt)
+#  pracTestComplete()
+#  dev.off()
+#  details <- practiceQuery()
+#  opiClose()
+#}
 
-gRunning <- TRUE # reset gRunning in case practice test was terminated early
-details <- inputs()
-if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
-opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+#gRunning <- TRUE # reset gRunning in case practice test was terminated early
+#details <- inputs()
+#if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
+#opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+#PSV <- setPSV(details$grid,details$stimSizeRoman)
 
-if (details$grid == "Peripheral") { 
-  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0))
-} else {
-  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400))
-}
 
-terminate <- Sys.time()
-tkdestroy(tt)  # closes the pause button upon completion of the test
-opiClose()
-graphics.off()
+#if (details$grid == "Peripheral") { 
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0))
+#} else {
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400))
+#}
 
-if (gRunning) {
-  windows(700,250)
-  testStatusFinal(z)
-  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=13,height=5)
-  testStatusFinal(z)
-  dev.off()
-  testComplete()
-}
+#terminate <- Sys.time()
+#tkdestroy(tt)  # closes the pause button upon completion of the test
+#opiClose()
+#graphics.off()
 
-if (gRunning) {
-  comments <- finalComments()
-  details$comments <- paste(details$comments,comments,sep=".")
-  writeFile()
-  writeFile2(details)
-  writeFile3(details)
-}
+#if (gRunning) {
+#  windows(700,250)
+#  testStatusFinal(z)
+#  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=13,height=5)
+#  testStatusFinal(z)
+#  dev.off()
+#  testComplete()
+#}
 
-opiClose()
-#source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
+#if (gRunning) {
+#  comments <- finalComments()
+#  details$comments <- paste(details$comments,comments,sep=".")
+#  writeFile()
+#  writeFile2(details)
+#  writeFile3(details)
+#}
+
+#opiClose()
+source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
