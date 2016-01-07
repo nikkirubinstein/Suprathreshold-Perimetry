@@ -233,7 +233,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     }
 
     respWin <- rep(initialRespWin,5)  ## set up adaptive response window
-
+    
+    respTime <- NULL      # vector of response times
     fp_counter <- NULL    # vector of responses for FP
     fn_counter <- NULL    # vector of responses for FN
     finished_counter <- 0 # number of terminated locations
@@ -260,7 +261,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             }
 
             fp_counter <- c(fp_counter, min(1,result$seen))
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]])
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
             if (details$gridType != "practice") {
             cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time))
@@ -274,7 +275,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states)
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]])
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
             if (details$gridType != "practice") {
               cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time))
@@ -306,7 +307,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         currentThresholds[rw,cl] <- sum(states[[rw,cl]]$pdf*states[[rw,cl]]$domain) # update currentThresholds
         currentNumPres[rw,cl] <- states[[rw,cl]]$numPresentations        
         
-        testStatus(tail(states[[rw,cl]]$responses,1),currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]])
+        testStatus(tail(states[[rw,cl]]$responses,1),currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
         if (details$gridType != "practice") {
           cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
           append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f\n", states[[rw,cl]]$x, states[[rw,cl]]$y, 
@@ -317,14 +318,16 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun)
           
           if (details$gridType != "practice") {
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y))
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime)
             cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
               append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,"(Dummy Trial)"))
           }
         }
         
-        if (tail(states[[rw,cl]]$responses,1)) 
+        if (tail(states[[rw,cl]]$responses,1)) { 
             respWin <- c(tail(states[[rw,cl]]$responseTimes,1),respWin[-5])
+            respTime <- c(tail(states[[rw,cl]]$responseTimes,1),respTime)
+        }
 
         if (stopFun(states[[rw,cl]])) {
                 # fill in finishedThresholds and remove from locs
@@ -345,6 +348,6 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             }
         }
     }
-    testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],plotStimResponse=FALSE)
-    return(list(t=currentThresholds, n=currentNumPres,fpc=fp_counter,fnc=fn_counter))
+    testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,plotStimResponse=FALSE)
+    return(list(t=currentThresholds, n=currentNumPres,fpc=fp_counter,fnc=fn_counter,rt=respTime))
 }
