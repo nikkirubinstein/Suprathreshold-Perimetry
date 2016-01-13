@@ -22,12 +22,14 @@ inputs <- function(){
   var2 <- tclVar("")
   var3 <- tclVar("")
   var4 <- tclVar("")
+  var5 <- tclVar("")
+  var6 <- tclVar("")
   
-  gridType <- list("Peripheral","30-2","30-1","24-2")
-  gridTypeTclList <- as.TclList(gridType)
-  comboBox <- .Tk.subwin(tt)
-  .Tcl(paste("ComboBox",.Tk.ID(comboBox),"-editable false -values",gridTypeTclList))
-  
+  VA <- c("20/10","20/12.5","20/16","20/20","20/25","20/32","20/40","20/50","20/63","20/80","20/100","20/125",
+             "20/160","20/200","20/250","20/320","20/400","20/500","20/630","20/800","CF","LP")
+  comboBox <- tkwidget(tt,"ComboBox",editable=FALSE,values=VA,textvariable=tclVar("20/20"))
+  gridType <- c("Peripheral","30-2","30-1","24-2")
+  comboBox2 <- tkwidget(tt,"ComboBox",editable=FALSE,values=gridType) 
   
   rb4 <- tkradiobutton(tt)
   rb5 <- tkradiobutton(tt)
@@ -52,7 +54,11 @@ inputs <- function(){
   entry1 <- tkentry(tt, textvariable=var1,width="40")
   entry2 <- tkentry(tt, textvariable=var2,width="40")
   entry3 <- tkentry(tt, textvariable=var3,width="40")
+  entry5 <- tkentry(tt, textvariable=var5,width="40")
+  entry6 <- tkentry(tt, textvariable=var6,width="40")
   entry4 <- tkentry(tt, textvariable=var4,width="40")
+
+  
   
   submit <- function() {
     if (tclvalue(var1) == "") {
@@ -68,10 +74,13 @@ inputs <- function(){
       b <- tclvalue(var2)
       c <- tclvalue(var3)
       d <- tclvalue(var4)
-      e <- gridType[[as.numeric(tclvalue(tcl(comboBox,"getvalue")))+1]]
+      e <- gridType[as.numeric(tclvalue(tcl(comboBox2,"getvalue")))+1]
       f <- tclvalue(rbValue2)
       g <- tclvalue(rbValue3)
       h <- as.logical(as.numeric(tclvalue(cbValue)))
+      i <- tclvalue(var5)
+      j <- tclvalue(var6)
+      k <- VA[as.numeric(tclvalue(tcl(comboBox,"getvalue")))+1]
       
       env <- parent.env(environment())
       env$a <- a
@@ -82,6 +91,9 @@ inputs <- function(){
       env$f <- f
       env$g <- g
       env$h <- h
+      env$i <- i
+      env$j <- j
+      env$k <- k
 
       tkdestroy(tt)
     }
@@ -96,11 +108,17 @@ inputs <- function(){
   tkgrid.configure(entry2,columnspan=7,sticky="new")
   tkgrid(tklabel(tt,text="Diagnosis"), entry3, pady = 10, padx =10)
   tkgrid.configure(entry3,columnspan=7,sticky="new")
+  tkgrid(tklabel(tt,text="Manifest\nRefraction"),entry5, pady = 10, padx =10)  
+  tkgrid.configure(entry5,columnspan=7,sticky="new")
+  tkgrid(tklabel(tt,text="Over-refraction"),entry6, pady = 10, padx =10)  
+  tkgrid.configure(entry6,columnspan=7,sticky="new")
+  tkgrid(tklabel(tt,text="Visual Acuity"),comboBox,pady=10,padx=10)
+  tkgrid.configure(comboBox,columnspan=7,sticky="new")
   tkgrid(tklabel(tt,text="Additional\nComments"),entry4, pady = 10, padx =10)  
   tkgrid.configure(entry4,columnspan=7,sticky="new")
 
-  tkgrid(tklabel(tt,text="Grid Type  "),comboBox,pady=10,padx=10)
-  tkgrid.configure(comboBox,columnspan=7,sticky="new")
+  tkgrid(tklabel(tt,text="Grid Type  "),comboBox2,pady=10,padx=10)
+  tkgrid.configure(comboBox2,columnspan=7,sticky="new")
   tkgrid(tklabel(tt,text="Stimulus\nSize"),tklabel(tt,text="III"),rb4,tklabel(tt,text="V"),rb5,tklabel(tt,text="VI"),rb6,pady=10,padx=10)
   eyeLab <- tklabel(tt,text="Eye")
   tkgrid(eyeLab,tklabel(tt,text="Right"),rb7,tklabel(tt,text="Left"),rb8,
@@ -121,7 +139,7 @@ inputs <- function(){
         f2 <- "VI"
   }
     
-  return(list(name=a,age=b,dx=c,comments=d,gridType=e,stimSizeRoman=f2,eye=g,fovea=h,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f))
+  return(list(name=a,age=b,dx=c,comments=d,gridType=e,stimSizeRoman=f2,eye=g,fovea=h,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f,MRx=i,OR=j,VA=k))
 }
 
 ###################################################################################################################
