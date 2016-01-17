@@ -69,9 +69,9 @@
 require("audio")
 
 procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, stopFun, finalFun,gridPat,
-        catchTrialLoadFreq=9,
-        catchTrialFreq=30,
-        catchTrialMax=5,
+        catchTrialLoadFreq=6,
+        catchTrialFreq=20,
+        catchTrialMax=14,
         FPLevel=dbTocd(55, 4000/pi),
         FNDelta=10,
         FNPause=500,

@@ -42,6 +42,8 @@
 #          1 Jan 2016: customized primary start value of BM priors based on MW normal data
 #          2 Jan 2016: Front loaded most catch trials to the first minute of test.
 #          6 Jan 2016: Added response time reliability measures to the live perimetrist display. 
+#         13 Jan 2016: Updated input menu to include Rx, ORx and VA.
+#         15 Jan 2016: Added ability to load details of previous patients at the input screen.
 
 
 rm(list=ls()) 
@@ -250,14 +252,14 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
         }
         return(finalF(state.fovea)[1])   
       }
-      opiSetBackground(fixation=.Octopus900Env$FIX_CROSS)
+      #opiSetBackground(fixation=.Octopus900Env$FIX_CROSS)
       pauseAtStartFovea() 
       fovealTH <- resFovea()
       fovealTestComplete(fovealTH)
     }
     
     windows(700,250)
-    opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE)
+    #opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE)
     pauseAtStart()
     commence <<- Sys.time()
     res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, onePriors, startF, stepF, stopF, finalF,
@@ -349,9 +351,9 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
 ######################################################################
 writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv",sep="")) {
   px_info <- data.frame(stringsAsFactors=FALSE)
-  labels <- c("#ID:","#Age:","#Diagnosis:","#Comments:","#Grid Type:","#Stimulus Size:","#Eye:")
+  labels <- c("#ID:","#Age:","#Diagnosis:","#Manifest Refraction:","#Over-refraction:","#VA:","#Comments:","#Grid Type:","#Stimulus Size:","#Eye:")
   px_info <- data.frame(cbind(c(px_info,labels)))
-  for (i in 1:7) {
+  for (i in 1:10) {
     px_info[i,2] <- paste(details[i],sep="")
   }
   cat(paste("#",date(),sep=""), "\n",  file=filename, append=TRUE)
@@ -424,6 +426,9 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
   output <- data.frame(ID=details$name,
                        Age = details$age,
                        Diagnosis = details$dx,
+                       Manifest_Rx = details$MRx,
+                       ORx = details$OR,
+                       VA = details$VA,
                        Comments = details$comments,
                        Grid = paste0("'",details$gridType,"'"),
                        Stimulus_Size = details$stimSizeRoman, 
@@ -470,14 +475,14 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
 ###########################################################################################
 setPSV <- function (grid,size) {
   if ((grid == "30-1") && (size == "V")) {
-    PSV <- 33
+    PSV <- 32
   } else if (grid == "30-2") {
       if (size == "III") {PSV <- 28} 
-        else if (size == "V") {PSV <- 33} 
+        else if (size == "V") {PSV <- 31} 
           else {PSV <- 30}
   } else if (grid == "Peripheral") {
-      if (size == "V") {PSV <- 31} 
-        else if (size == "VI") {PSV <- 32} 
+      if (size == "V") {PSV <- 29} 
+        else if (size == "VI") {PSV <- 31} 
           else {PSV <- 30} 
   } else {
     PSV <- 30
@@ -562,63 +567,94 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
   }
 }
 
+#####################################################################################################
+# Compile a patient database in order to recall existing patient details for the input menu.
+#
+#
+#####################################################################################################
+px_database <- function (details) {
+  output <- data.frame(ID=details$name,
+                       Age = details$age,
+                       Diagnosis = details$dx,
+                       Manifest_Rx = details$MRx,
+                       ORx = details$OR,
+                       VA = details$VA,
+                       Comments = details$comments,
+                       Grid = details$gridType,
+                       Stimulus_Size = details$stimSize, 
+                       Eye = details$eye)
+  
+  if (file.exists("patient_list.txt")) {
+    PL <- read.csv("patient_list.txt")
+    if (any(grepl(paste0("^",details$name,"$"),PL$ID))) {
+      if (!any(PL$Eye[which(PL$ID == details$name)] == details$eye)) {
+        write.table(output,file="patient_list.txt",append=TRUE,col.names=FALSE,row.names=FALSE,sep=",")
+      }
+    } else {
+        write.table(output,file="patient_list.txt",append=TRUE,col.names=FALSE,row.names=FALSE,sep=",")
+    }
+  } else {
+    write.table(output,file="patient_list.txt",append=TRUE,row.names=FALSE,sep=",")
+  }
+}
 
 ####################################
 # Example Usage
 ####################################
-require(OPI)
-chooseOpi("Octopus900")
-source("query_patient_details.r")
+#require(OPI)
+#chooseOpi("Octopus900")
+#source("query_patient_details.r")
 
-gRunning <- TRUE
+#gRunning <- TRUE
 
-details <- practiceQuery()
+#details <- practiceQuery()
 
-while (details$practice == TRUE) {
-  gRunning <- TRUE
-  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
-  tkdestroy(tt)
-  pracTestComplete()
-  dev.off()
-  details <- practiceQuery()
-  opiClose()
-}
+#while (details$practice == TRUE) {
+#  gRunning <- TRUE
+#  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+#  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
+#  tkdestroy(tt)
+#  pracTestComplete()
+#  dev.off()
+#  details <- practiceQuery()
+#  opiClose()
+#}
 
-gRunning <- TRUE # reset gRunning in case practice test was terminated early
-details <- inputs()
-if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
-opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-PSV <- setPSV(details$grid,details$stimSizeRoman)
+#gRunning <- TRUE # reset gRunning in case practice test was terminated early
+#details <- inputs()
+#if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
+#opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+#PSV <- setPSV(details$grid,details$stimSizeRoman)
 
 
-if (details$grid == "Peripheral") { 
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0))
-} else {
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400))
-}
+#if (details$grid == "Peripheral") { 
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0))
+#} else {
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400))
+#}
 
-terminate <- Sys.time()
-tkdestroy(tt)  # closes the pause button upon completion of the test
-opiClose()
-graphics.off()
+#terminate <- Sys.time()
+#tkdestroy(tt)  # closes the pause button upon completion of the test
+#opiClose()
+#graphics.off()
 
-if (gRunning) {
-  windows(700,250)
-  testStatusFinal(z)
-  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=13,height=5)
-  testStatusFinal(z)
-  dev.off()
-  testComplete()
-}
+#if (gRunning) {
+#windows(900,350)
+#testStatusFinal(z)
+#pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+#testStatusFinal(z)
+#dev.off()
+#testComplete()
+#}
 
-if (gRunning) {
-  comments <- finalComments()
-  details$comments <- paste(details$comments,comments,sep=".")
-  writeFile()
-  writeFile2(details)
-  writeFile3(details)
-}
+#if (gRunning) {
+#  comments <- finalComments()
+#  details$comments <- paste(details$comments,comments,sep=".")
+#  writeFile()
+#  writeFile2(details)
+#  writeFile3(details)
+#  px_database(details)
+#}
 
-opiClose()
-#source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
+#opiClose()
+source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
