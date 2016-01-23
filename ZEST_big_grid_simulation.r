@@ -3,10 +3,11 @@
 ####################################
 require(OPI)
 #chooseOpi("SimHenson")
-chooseOpi("SimGaussian")
-#chooseOpi("SimYes")
+#chooseOpi("SimGaussian")
+chooseOpi("SimYes")
 #chooseOpi("SimNo")
-opiInitialize(sd=1)
+#opiInitialize(sd=1)
+opiInitialize(type="C", cap=6, display=NULL)
 source("query_patient_details.r")
 gRunning <- TRUE
 
@@ -81,17 +82,17 @@ TT.30.2 <- matrix(c(
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  4,    4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,    3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  26,  26,  26,    26,  26,  26,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  26,  1,  26,    26,  1,  26,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  26,  26,  26,    26,  26, NA,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,    35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,    35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,    35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35, NA,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  26,  26,  26,    26,  26, NA,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  26,  1,  26,    26,  1,  26,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  26,  26,  26,    26,  26,  26,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,    3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  4,    4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35, NA,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,    35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,    35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,    35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
@@ -156,8 +157,7 @@ if (details$eye == "left") {
   TT <- grid.flip(TT)
 }
 
-
-  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierFreq=2,interStimInterval=c(0,0), tt=TT)
+  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierFreq=2,interStimInterval=c(0,0), tt=TT,moveProjector = FALSE)
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()

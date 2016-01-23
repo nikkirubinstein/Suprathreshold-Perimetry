@@ -44,7 +44,7 @@
 #          6 Jan 2016: Added response time reliability measures to the live perimetrist display. 
 #         13 Jan 2016: Updated input menu to include Rx, ORx and VA.
 #         15 Jan 2016: Added ability to load details of previous patients at the input screen.
-
+#         21 Jan 2016: Projector moves to next stimulus position whilst observer is responding (peripheral test only)
 
 rm(list=ls()) 
 source("growthPattern2.r")
@@ -77,7 +77,7 @@ source("testStatusOutput.r")
 #########################################################################
 Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
                     interStimInterval=c(minTime=0, maxTime=0),
-                    tt=NA, fpv=0.00, fnv=0.00,outlierFreq=1,outlierValue=5) {
+                    tt=NA, fpv=0.00, fnv=0.00,outlierFreq=1,outlierValue=5,moveProjector = TRUE) {
     ####################################################################
     # Each location derives its start value from the average of all of the
     # immediate 9 neighbours that are lower than it.
@@ -270,7 +270,9 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             FNPause=500,
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
-            FNSize=as.numeric(details$stimSize))
+            FNSize=as.numeric(details$stimSize),
+            moveProj = moveProjector)
+    
     z <- res1$t < 0
     tz <- res1$t
     tz[z] <- 0
@@ -327,7 +329,9 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             FNPause=500,
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
-            FNSize=as.numeric(details$stimSize))
+            FNSize=as.numeric(details$stimSize),
+            moveProj = moveProjector)
+      
       q <- res2$t < 0
       tq <- res2$t
       tq[q] <- 0
@@ -478,7 +482,7 @@ setPSV <- function (grid,size) {
     PSV <- 32
   } else if (grid == "30-2") {
       if (size == "III") {PSV <- 28} 
-        else if (size == "V") {PSV <- 31} 
+        else if (size == "V") {PSV <- 28} 
           else {PSV <- 30}
   } else if (grid == "Peripheral") {
       if (size == "V") {PSV <- 29} 
@@ -626,11 +630,10 @@ px_database <- function (details) {
 #opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
 #PSV <- setPSV(details$grid,details$stimSizeRoman)
 
-
 #if (details$grid == "Peripheral") { 
-#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0))
+#  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0),moveProjector = TRUE)
 #} else {
-#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400))
+#  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400),moveProjector = FALSE)
 #}
 
 #terminate <- Sys.time()

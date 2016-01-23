@@ -78,7 +78,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         FNLocationThreshold=20,
         FPSize, FNSize,
         initialRespWin=1000,
-        respWinBuffer=200) {
+        respWinBuffer=200,
+        moveProj) {
 
     ####################################################################
     # Return any locations that are in the immediate 8 neighbours 
@@ -117,7 +118,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     ####################################################################
     # Present FP or FN trial. Return TRUE(seen) or FALSE (not seen)
     ####################################################################
-    presentCatch <- function(posOrNeg, responseWindow, currentThresholds, states) {
+    presentCatch <- function(posOrNeg, responseWindow, currentThresholds, states,index) {
         if (posOrNeg == "POS") {
             s <- list(x=9, y=9, level=FPLevel, size=FPSize, duration=200,
                   responseWindow=responseWindow)
@@ -132,7 +133,13 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
                       responseWindow=responseWindow)
         }
         class(s) <- "opiStaticStimulus"
-        showStim <- opiPresent(stim=s)
+        
+        if (moveProj) {
+          showStim <- opiPresent(stim=s,states[[index[[1]][1],index[[1]][2]]]$makeStim(0,0))
+        } else {
+          showStim <- opiPresent(stim=s)
+        }
+        
         return (c(showStim,list(stimulus=s$level)))
     }
     
@@ -141,7 +148,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     # so that that particular location is not tested in a row
     #
     ####################################################################
-    presentDummy <- function (grid,responseWindow,dummyState) {
+    presentDummy <- function (grid,responseWindow,dummyState,states) {
       locIndex <- which(!is.na(grid),arr.ind=TRUE)
       loc <- locIndex[round(runif(1,1,nrow(locIndex))),] # choose a location at random
       stimulus <- round(runif(1,0,30)) # choose a stimulus intensity at random     
@@ -149,8 +156,13 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
                 level=dbTocd(stimulus, 4000/pi),size=FNSize,duration=200,responseWindow=responseWindow)
       
       class(s) <- "opiStaticStimulus"
-      showStim <- c(opiPresent(stim=s),list(x=s$x,y=s$y,stimulus=stimulus))
-      return (showStim) 
+      
+      if (moveProj) {
+        showStim <- c(opiPresent(stim=s,states[[index[[1]][1],index[[1]][2]]]$makeStim(0,0)),list(x=s$x,y=s$y,stimulus=stimulus))
+      } else {
+        showStim <- c(opiPresent(stim=s),list(x=s$x,y=s$y,stimulus=stimulus))
+      }
+        return (showStim) 
     }
     
     ####################################################################
@@ -198,7 +210,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         lookupIndex <- sum(apply(delLocs,1,function (x) ((x[1] == rr) && x[2] == cc))) 
         prevStimVal <- tail(states[[rr,cc]]$stimuli,lookupIndex)[1]
         prevStimVal <- which(prevStimVal == states[[rr,cc]]$domain)
-        #browser()
+        
         if (tail(states[[rr,cc]]$responses,lookupIndex)[1] == FALSE) {
           states[[rr,cc]]$pdf <- states[[rr,cc]]$pdf / (1-states[[rr,cc]]$likelihood[prevStimVal,])
           myEnv$states[[rr,cc]]$pdf <- states[[rr,cc]]$pdf / sum(states[[rr,cc]]$pdf)
@@ -239,9 +251,9 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     fn_counter <- NULL    # vector of responses for FN
     finished_counter <- 0 # number of terminated locations
     counter <- 1          # number of presentations
-    chooseLoc <- 1        # location index
     locsPresented <- NULL # vector of locations presented in order
     gUndos <<- 0
+    index <- locs[runif(1,1,length(locs))] # choose random location to test first
     
     ####################################################################
     # loop while still some unterminated locations
@@ -252,7 +264,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         if ((counter <= 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 != 0)) ||
             (counter > 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 != 0))) {
 
-            result <- presentCatch("POS", mean(respWin) + respWinBuffer, currentThresholds, states)
+            result <- presentCatch("POS", mean(respWin) + respWinBuffer, currentThresholds, states,index)
             
             if (result$seen) {
               for (i in 1:2) {
@@ -272,7 +284,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         if ((counter <= 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE)) ||
             (counter > 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE))){
           
-          result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states)
+          result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states,index)
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
@@ -291,19 +303,26 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         weight <- sapply(getWave, function (x) {1/(x^2)})
       
         if (length(locs) > 1) {
-          index <- sample(1:length(locs),1,prob=weight)
-          while (chooseLoc == index) {
-            index <- sample(1:length(locs),1,prob=weight)
+          index[2] <- locs[sample(1:length(locs),1,prob=weight)]
+          while (all(index[[1]] == index[[2]])) {
+            index[2] <- locs[sample(1:length(locs),1,prob=weight)]
           }
-          chooseLoc <- index
-        } else {index <- 1}
+        } else {index[[1]] <- locs[[1]]}
         
-        rw <- locs[[index]][1]
-        cl <- locs[[index]][2]
+        rw <- index[[1]][1]
+        cl <- index[[1]][2]
+        rw2 <- index[[2]][1]
+        cl2 <- index[[2]][2]
+
         locsPresented <- rbind(locsPresented,c(rw,cl))
         
         states[[rw,cl]] <- setResponseWindow(states[[rw,cl]], mean(respWin))
-        states[[rw,cl]] <- stepFun(states[[rw,cl]])
+        
+        if (length(locs) > 1 && moveProj == TRUE) {
+          states[[rw,cl]] <- stepFun(states[[rw,cl]],nextStimState=states[[rw2,cl2]])
+        } else {
+          states[[rw,cl]] <- stepFun(states[[rw,cl]])
+        }
         currentThresholds[rw,cl] <- sum(states[[rw,cl]]$pdf*states[[rw,cl]]$domain) # update currentThresholds
         currentNumPres[rw,cl] <- states[[rw,cl]]$numPresentations        
         
@@ -315,7 +334,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         }
         
         if (length(locs) == 1) {
-          result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun)
+          result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
           
           if (details$gridType != "practice") {
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime)
@@ -334,7 +353,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             finishedThresholds[rw,cl] <- finalFun(states[[rw,cl]])[1]
             finished_counter <- finished_counter + 1
             
-            locs <- locs[-index]
+            locs <- locs[-which(sapply(locs,function(x) {all(x == index[[1]])}))]
 
                 # look around for neighbours that can be opened
             newLocs <- openUP(gp, rw, cl,states)
@@ -347,6 +366,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
                 }
             }
         }
+        index[[1]] <- index[[2]]  #move next stimulus to current stimulus before next presentation sequence
     }
     testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,plotStimResponse=FALSE)
     return(list(t=currentThresholds, n=currentNumPres,fpc=fp_counter,fnc=fn_counter,rt=respTime))
