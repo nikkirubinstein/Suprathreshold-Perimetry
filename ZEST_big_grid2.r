@@ -45,6 +45,8 @@
 #         13 Jan 2016: Updated input menu to include Rx, ORx and VA.
 #         15 Jan 2016: Added ability to load details of previous patients at the input screen.
 #         21 Jan 2016: Projector moves to next stimulus position whilst observer is responding (peripheral test only)
+#         25 Jan 2016: Created adaptive interStimInterval based on observer's response times.
+
 
 rm(list=ls()) 
 source("growthPattern2.r")
@@ -76,7 +78,7 @@ source("testStatusOutput.r")
 # 
 #########################################################################
 Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
-                    interStimInterval=c(minTime=0, maxTime=0),
+                    minInterStimInterval=300,
                     tt=NA, fpv=0.00, fnv=0.00,outlierFreq=1,outlierValue=5,moveProjector = TRUE) {
     ####################################################################
     # Each location derives its start value from the average of all of the
@@ -211,8 +213,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     #####################################################
     # Given a state, step the procedure and return new state
     #####################################################
-    stepF <- function(state, nextStimState=NULL) { 
-            Sys.sleep(runif(1, min=interStimInterval[1], max=interStimInterval[2])/1000)
+    stepF <- function(state, nextStimState=NULL) {
             #print(state$pdf)
             if (is.null(nextStimState))
                 return(ZEST.step(state)$state)
@@ -271,7 +272,8 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
             FNSize=as.numeric(details$stimSize),
-            moveProj = moveProjector)
+            moveProj = moveProjector,
+            minInterStimInt = minInterStimInterval)
     
     z <- res1$t < 0
     tz <- res1$t
@@ -330,7 +332,8 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
             FNSize=as.numeric(details$stimSize),
-            moveProj = moveProjector)
+            moveProj = moveProjector,
+            minInterStimInt = minInterStimInterval)
       
       q <- res2$t < 0
       tq <- res2$t
@@ -353,7 +356,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
 # filename        - name of the output file
 #
 ######################################################################
-writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv",sep="")) {
+writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv",sep="")) {
   px_info <- data.frame(stringsAsFactors=FALSE)
   labels <- c("#ID:","#Age:","#Diagnosis:","#Manifest Refraction:","#Over-refraction:","#VA:","#Comments:","#Grid Type:","#Stimulus Size:","#Eye:")
   px_info <- data.frame(cbind(c(px_info,labels)))
@@ -475,18 +478,18 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
 ###########################################################################################
 # Function which sets the primary start value for BM priors
 # depending on test pattern/target size combination.
-#
+# NOTE: Procedure breaks down if PSV > 30. PSV must be 30 dB or lower.
 ###########################################################################################
 setPSV <- function (grid,size) {
   if ((grid == "30-1") && (size == "V")) {
-    PSV <- 32
+    PSV <- 30
   } else if (grid == "30-2") {
       if (size == "III") {PSV <- 28} 
-        else if (size == "V") {PSV <- 28} 
+        else if (size == "V") {PSV <- 30} 
           else {PSV <- 30}
   } else if (grid == "Peripheral") {
-      if (size == "V") {PSV <- 29} 
-        else if (size == "VI") {PSV <- 31} 
+      if (size == "V") {PSV <- 30} 
+        else if (size == "VI") {PSV <- 30} 
           else {PSV <- 30} 
   } else {
     PSV <- 30
@@ -501,22 +504,22 @@ setPSV <- function (grid,size) {
 ###########################################################################################
 writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")) {
   
-  if (details$grid == "24-2") {
+  if (details$gridType == "24-2") {
     if (details$stimSizeRoman == "III") {pattern <- "p24d2"}
     if (details$stimSizeRoman == "V") {pattern <- "p24d2v"}
     if (details$stimSizeRoman == "VI") {pattern <- "p24d2vi"}
   }
-  if (details$grid == "30-2") {
+  if (details$gridType == "30-2") {
     if (details$stimSizeRoman == "III") {pattern <- "p30d2"}
     if (details$stimSizeRoman == "V") {pattern <- "p30d2v"}
     if (details$stimSizeRoman == "VI") {pattern <- "p30d2vi"}
   }
-  if (details$grid == "30-1") {
+  if (details$gridType == "30-1") {
     if (details$stimSizeRoman == "III") {pattern <- "p30d1"}
     if (details$stimSizeRoman == "V") {pattern <- "p30d1v"}
     if (details$stimSizeRoman == "VI") {pattern <- "p30d1vi"}
     }
-  if (details$grid == "Peripheral") {
+  if (details$gridType == "Peripheral") {
     if (details$stimSizeRoman == "III") {pattern <- "peripheral"}
     if (details$stimSizeRoman == "V") {pattern <- "peripheralv"}
     if (details$stimSizeRoman == "VI") {pattern <- "peripheralvi"}
@@ -628,12 +631,12 @@ px_database <- function (details) {
 #details <- inputs()
 #if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
 #opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-#PSV <- setPSV(details$grid,details$stimSizeRoman)
+#PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
-#if (details$grid == "Peripheral") { 
-#  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=0),moveProjector = TRUE)
+#if (details$gridType == "Peripheral") { 
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=5,outlierFreq=1,minInterStimInterval=0,moveProjector = TRUE)
 #} else {
-#  z <- Zest242(eye=details$eye, primaryStartValue=30, gridType=details$grid,outlierValue=5,outlierFreq=1,interStimInterval=c(minTime=0, maxTime=400),moveProjector = FALSE)
+#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=5,outlierFreq=1,minInterStimInterval=300,moveProjector = TRUE)
 #}
 
 #terminate <- Sys.time()
@@ -644,7 +647,7 @@ px_database <- function (details) {
 #if (gRunning) {
 #windows(900,350)
 #testStatusFinal(z)
-#pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+#pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
 #testStatusFinal(z)
 #dev.off()
 #testComplete()

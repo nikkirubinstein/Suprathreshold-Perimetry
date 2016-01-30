@@ -79,7 +79,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         FPSize, FNSize,
         initialRespWin=1000,
         respWinBuffer=200,
-        moveProj) {
+        moveProj,
+        minInterStimInt) {
 
     ####################################################################
     # Return any locations that are in the immediate 8 neighbours 
@@ -226,6 +227,24 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
 
     }
     
+    ##############################################################################################################
+    # Function for the adaptive interstimulus interval
+    # 
+    # INPUTS
+    #   responseTime - vector of total response times throughout test
+    #   minISI - the minimum inter-stimulus interval
+    #   interStimMultiplier - multiplier of the mean response time, which determines the max interstim interval
+    #
+    ################################################################################################################
+    interStimInt <- function (responseTime = respTime,minISI,interStimMultiplier = 1) {
+      if (!is.null(respTime)) {
+        Sys.sleep(runif(1, min=minISI, max= max(minISI,mean(responseTime) * interStimMultiplier))/1000)  # pause before presenting next stimulus
+      } else {
+        Sys.sleep(500/1000)  #If there have been no response times recorded yet, make interstim interval 500 ms
+      }
+    }
+
+    
     ####################################################################
     # set up answers and loop vars
     ####################################################################
@@ -323,6 +342,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         } else {
           states[[rw,cl]] <- stepFun(states[[rw,cl]])
         }
+        
+        interStimInt(respTime,minInterStimInt)
         currentThresholds[rw,cl] <- sum(states[[rw,cl]]$pdf*states[[rw,cl]]$domain) # update currentThresholds
         currentNumPres[rw,cl] <- states[[rw,cl]]$numPresentations        
         
@@ -335,6 +356,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         
         if (length(locs) == 1) {
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
+          interStimInt(respTime,minInterStimInt)
           
           if (details$gridType != "practice") {
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime)
@@ -343,9 +365,9 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           }
         }
         
-        if (tail(states[[rw,cl]]$responses,1)) { 
-            respWin <- c(tail(states[[rw,cl]]$responseTimes,1),respWin[-5])
-            respTime <- c(tail(states[[rw,cl]]$responseTimes,1),respTime)
+        if (tail(states[[rw,cl]]$responses,1)) {
+          respWin <- c(tail(states[[rw,cl]]$responseTimes,1),respWin[-5])
+          respTime <- c(tail(states[[rw,cl]]$responseTimes,1),respTime)
         }
 
         if (stopFun(states[[rw,cl]])) {

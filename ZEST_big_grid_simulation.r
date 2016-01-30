@@ -140,16 +140,16 @@ while (details$practice == TRUE) {
 details <- inputs()
 if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
 np <- NULL
-PSV <- setPSV(details$grid,details$stimSizeRoman)
+PSV <- setPSV(details$gridType,details$stimSizeRoman)
 #trials <- 500
 #for ( i in 1:trials) {
 #print(i)
 
-if (details$grid == "Peripheral") {
+if (details$gridType == "Peripheral") {
   TT <- Peripheral_TT
-} else if (details$grid == "30-1") {
+} else if (details$gridType == "30-1") {
   TT <- TT.30.1
-} else if (details$grid == "30-2") {
+} else if (details$gridType == "30-2") {
   TT <- TT.30.2
 }
 
@@ -157,7 +157,7 @@ if (details$eye == "left") {
   TT <- grid.flip(TT)
 }
 
-  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$grid,outlierFreq=2,interStimInterval=c(0,0), tt=TT,moveProjector = FALSE)
+  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()
@@ -167,7 +167,7 @@ graphics.off()
 if (gRunning) {
   windows(900,350)
   testStatusFinal(z)
-  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
   testStatusFinal(z)
   dev.off()
   testComplete()
