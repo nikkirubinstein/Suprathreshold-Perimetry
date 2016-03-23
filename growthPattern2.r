@@ -17,7 +17,7 @@
 # not numbered 1 (the initial points) as they can only be opened for
 # testing if an immediate 8-neighbour is complete.
 #
-# This version also has allowane for catch trials and an adaptive response
+# This version also has allowance for catch trials and an adaptive response
 # window.
 #
 # WARNING - the function setResponseWindow assume that the responseWindow
@@ -39,6 +39,7 @@
 #
 # INPUTS: 
 #   gp  - growth pattern matrix (min(gp) == 1). See 'chain' comment above.
+#   gn  - growth next. lookup table of next locations to open up in the growth pattern
 #   statrs - matrix same size as gp giving start values for gp==1
 #   startFun - function(guess, rw, cl) that creates a state for
 #              location (rw, cl) in gp using guess as start guess
@@ -68,13 +69,13 @@
 #source("testStatusOutput.r")
 require("audio")
 
-procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, stopFun, finalFun,gridPat,
+procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun, stopFun, finalFun,gridPat,
         catchTrialLoadFreq=6,
         catchTrialFreq=20,
         catchTrialMax=14,
         FPLevel=dbTocd(55, 4000/pi),
         FNDelta=10,
-        FNPause=500,
+        FNPause=300,
         FNLocationThreshold=20,
         FPSize, FNSize,
         initialRespWin=1000,
@@ -91,29 +92,30 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
     #   rw   - row of location
     #   cl   - column of location
     #
-    # RETURNS: list of locatoins 
-    ####################################################################
-    openUP <- function(gp, rw, cl,states) {
-        wave <- gp[rw,cl]
-
-        locations <- NULL
-        for(ii in -1:1) 
-        for(jj in -1:1) 
-        if (ii != 0 || jj != 0) {
-            trow <- rw + ii
-            tcol <- cl + jj
-            if (all(c(trow,tcol)) > 0 && 
-                trow <= nrow(gp)      && 
-                tcol <= ncol(gp)      && 
-                !is.na(gp[trow,tcol]) &&
-                is.null(states[trow,tcol][[1]]) &&
-                gp[trow, tcol] == wave + 1) {
-                    locations <- c(locations, list(c(trow, tcol)))
-            }
-            
+    # RETURNS: matrix of locations where column 1 = x coordinate, column 2 = y 
+    ########################################################################
+    openUP <- function(gp, gn, rw, cl, states) {
+      wave <- gp[rw,cl]
+      locations <- NULL
+      x <- states[[rw,cl]]$x
+      y <- states[[rw,cl]]$y
+      
+      nextLocs <- gn[[wave]][[paste(x,y,sep=" ")]]
+  
+      if (!is.null(unlist(nextLocs))) {
+  
+        locations <- matrix(nextLocs,length(unlist(nextLocs))/2,2) #make sure locations are in matrix form (becomes numeric if there is only one row)
+        
+        for (row in 1:nrow(locations)) { # convert back to row and column
+          locations[row,1] <- 91 + locations[row,1]
+          locations[row,2] <- 55 - locations[row,2]
         }
-
-        return(locations)
+        locations <- t(apply(locations,1,rev)) # flip so that row index is in first column and col index in second column
+        locations <- locations[apply(locations,1,function (x) {is.null(states[[x[1],x[2]]])}),] # remove locations that have already been opened up
+        locations <- matrix(locations,length(unlist(locations))/2,2)
+        if (nrow(locations) == 0) {locations <- NULL}
+      }
+      return(locations)
     }
 
     ####################################################################
@@ -240,7 +242,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
       if (!is.null(respTime)) {
         Sys.sleep(runif(1, min=minISI, max= max(minISI,mean(responseTime) * interStimMultiplier))/1000)  # pause before presenting next stimulus
       } else {
-        Sys.sleep(500/1000)  #If there have been no response times recorded yet, make interstim interval 500 ms
+        Sys.sleep(200/1000)  #If there have been no response times recorded yet, make interstim interval 200 ms
       }
     }
 
@@ -292,7 +294,8 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             }
 
             fp_counter <- c(fp_counter, min(1,result$seen))
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
+            
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,testGrid = gridPat)
             if (details$gridType != "practice") {
             cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time))
@@ -306,7 +309,7 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states,index)
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime, testGrid = gridPat)
             if (details$gridType != "practice") {
               cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time))
@@ -326,7 +329,10 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           while (all(index[[1]] == index[[2]])) {
             index[2] <- locs[sample(1:length(locs),1,prob=weight)]
           }
-        } else {index[[1]] <- locs[[1]]}
+        } else {
+          index[[1]] <- locs[[1]]
+          index[[2]] <- locs[[1]]
+        }
         
         rw <- index[[1]][1]
         cl <- index[[1]][2]
@@ -343,11 +349,11 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
           states[[rw,cl]] <- stepFun(states[[rw,cl]])
         }
         
-        interStimInt(respTime,minInterStimInt)
+        if (details$gridType != "Peripheral") {interStimInt(respTime,minInterStimInt)}
         currentThresholds[rw,cl] <- sum(states[[rw,cl]]$pdf*states[[rw,cl]]$domain) # update currentThresholds
         currentNumPres[rw,cl] <- states[[rw,cl]]$numPresentations        
         
-        testStatus(tail(states[[rw,cl]]$responses,1),currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime)
+        testStatus(tail(states[[rw,cl]]$responses,1),currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime, testGrid = gridPat)
         if (details$gridType != "practice") {
           cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
           append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f\n", states[[rw,cl]]$x, states[[rw,cl]]$y, 
@@ -356,10 +362,10 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         
         if (length(locs) == 1) {
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
-          interStimInt(respTime,minInterStimInt)
+          if (details$gridType != "Peripheral") {interStimInt(respTime,minInterStimInt)}
           
           if (details$gridType != "practice") {
-            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime)
+            testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime, testGrid = gridPat)
             cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
               append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,"(Dummy Trial)"))
           }
@@ -378,11 +384,11 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
             locs <- locs[-which(sapply(locs,function(x) {all(x == index[[1]])}))]
 
                 # look around for neighbours that can be opened
-            newLocs <- openUP(gp, rw, cl,states)
+            newLocs <- openUP(gp, gn, rw, cl,states)
           
             if (!is.null(newLocs)) {
-                for (i in 1:length(newLocs)) {
-                    rc <- newLocs[[i]]
+                for (i in 1:nrow(newLocs)) {
+                    rc <- newLocs[i,]
                     states[[rc[1], rc[2]]] <- startFun(finishedThresholds[rw,cl], rc[1], rc[2])
                     locs <- c(locs, list(rc))
                 }
@@ -390,6 +396,6 @@ procedureWithGrowthPattern <- function(startTime,gp,starts, startFun, stepFun, s
         }
         index[[1]] <- index[[2]]  #move next stimulus to current stimulus before next presentation sequence
     }
-    testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,plotStimResponse=FALSE)
+    testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,plotStimResponse=FALSE,testGrid = gridPat)
     return(list(t=currentThresholds, n=currentNumPres,fpc=fp_counter,fnc=fn_counter,rt=respTime))
 }

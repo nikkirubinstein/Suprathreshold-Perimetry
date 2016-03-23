@@ -1,4 +1,4 @@
-  require(fields)
+require(fields)
 
 f <- function(m) { ## rotates image plot
   t(m)[,nrow(m):1]
@@ -10,12 +10,16 @@ f <- function(m) { ## rotates image plot
 #
 #
 ################################################################################
-testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo,respTime,plotStimResponse=TRUE) {
-  if (details$gridType == "30-1") {
-    combos <- expand.grid(seq(-90,90,6),seq(54,-54,-6))
-  } else {
-    combos <- expand.grid(seq(-87,87,6),seq(51,-51,-6))
-  }
+testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo,respTime,plotStimResponse=TRUE,testGrid) {
+  
+  colnames(currentThresholds) <- seq(-90,90,1)
+  rownames(currentThresholds) <- seq(54,-54,-1)
+  
+  #take currentThresholds grid and remove all columns and rows which consist of only NAs
+  dispCurrent <- currentThresholds[apply(testGrid,1,function (x) !all(is.na(x))),apply(testGrid,2,function (x) !all(is.na(x)))]
+  dispFinished <- finishedThresholds[apply(testGrid,1,function (x) !all(is.na(x))),apply(testGrid,2,function (x) !all(is.na(x)))]
+  combos <- expand.grid(1:ncol(dispCurrent),nrow(dispCurrent):1)
+  
   par(mar=c(0, 4, 0, 1) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
   plot(1,type="n",xlim=c(1,10),ylim=c(1,100),xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
@@ -57,28 +61,21 @@ testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedTh
   text(1,10,paste("% Complete: ",finished_counter,"/",length(which(gp > 0))," (",round(finished_counter/length(which(gp > 0))*100),"%)",sep=""),pos=4,cex=2)
   
   par(mar=c(4, 3, 1, 2) + 0.1)
-  if (details$gridType == "30-1") {
-    image.plot(seq(-90,90,6),seq(-54,54,6),f(currentThresholds),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="Eccentricity (°)",ylab="Eccentricity (°)",zlim=c(-1,35))
-    layout(matrix(c(1,rep(2,2)),1,3))
-    grid(nx=31,ny=19,col="white",lty="solid")
-    axis(1,at=c(seq(-90,-6,12),seq(6,90,12)))
-    axis(2,at=c(seq(-54,-6,12),seq(6,54,12)))
-  } else {
-    image.plot(seq(-87,87,6),seq(-51,51,6),f(currentThresholds),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="Eccentricity (°)",ylab="Eccentricity (°)",zlim=c(-1,35))
-    layout(matrix(c(1,rep(2,2)),1,3))
-    grid(nx=30,ny=18,col="white",lty="solid")
-    axis(1,at=c(seq(-87,-3,12),seq(3,87,12)))
-    axis(2,at=c(seq(-51,-3,12),seq(3,51,12)))
-  }
+  #image.plot(as.numeric(colnames(dispCurrent)),rev(as.numeric(rownames(dispCurrent))),f(dispCurrent),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="",ylab="",zlim=c(-4,35))
+  image.plot(1:ncol(dispCurrent),1:nrow(dispCurrent),f(dispCurrent),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="",ylab="",zlim=c(-4,35))
+  layout(matrix(c(1,rep(2,2)),1,3))
+  grid(nx=ncol(dispCurrent),ny=nrow(dispCurrent),col="white",lty="solid")
+  axis(1,at=1:ncol(dispCurrent),as.numeric(colnames(dispCurrent)))
+  axis(2,at=nrow(dispCurrent):1,as.numeric(rownames(dispCurrent)))
 
-  text(combos[,1], combos[,2],round(as.vector(t(currentThresholds))),col="red",font=2)
-  text(combos[,1], combos[,2],round(as.vector(t(finishedThresholds))),col="blue",font=2)
+  text(combos[,1],combos[,2],round(as.vector(t(dispCurrent))),col="red",font=2,cex=2)
+  text(combos[,1],combos[,2],round(as.vector(t(dispFinished))),col="blue",font=2,cex=2)
   
   if (plotStimResponse) {
     if (stimResponse == TRUE) {
-      colorbar.plot(stateInfo$x,stateInfo$y,41,strip.width=0.055,strip.length=0.057,col="green",adj.x=0.48,adj.y=0.51)
+      colorbar.plot(match(stateInfo$x,colnames(dispCurrent)),(nrow(dispCurrent) + 1) - match(stateInfo$y,rownames(dispCurrent)),41,strip.width=1/ncol(dispCurrent),strip.length=(1/nrow(dispCurrent)*0.55),col="green",adj.x=0.5,adj.y=0.5,horizontal = FALSE)
     } else {
-      colorbar.plot(stateInfo$x,stateInfo$y,41,strip.width=0.055,strip.length=0.057,col="red",adj.x=0.48,adj.y=0.51)
+      colorbar.plot(match(stateInfo$x,colnames(dispCurrent)),(nrow(dispCurrent) + 1) - match(stateInfo$y,rownames(dispCurrent)),41,strip.width=1/ncol(dispCurrent),strip.length=(1/nrow(dispCurrent)*0.55),col="red",adj.x=0.5,adj.y=0.5,horizontal = FALSE)
       }
   }
 }
@@ -90,11 +87,10 @@ testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedTh
 #
 #####################################################################################################################
 testStatusFinal <- function (summary) {
-  if (details$gridType == "30-1") {
-    combos <- expand.grid(seq(-90,90,6),seq(54,-54,-6))
-  } else {
-    combos <- expand.grid(seq(-87,87,6),seq(51,-51,-6))
-  }
+
+  disp <- round(summary$th[apply(summary$th,1,function (x) !all(is.na(x))),apply(summary$th,2,function (x) !all(is.na(x)))])
+  combos <- expand.grid(1:ncol(disp),nrow(disp):1)
+
   par(mar=c(0, 4, 0, 1) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
   plot(1,type="n",xlim=c(1,10),ylim=c(1,100),xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
@@ -138,19 +134,9 @@ testStatusFinal <- function (summary) {
   }
   
   par(mar=c(4, 3, 1, 2) + 0.1)
-  if (details$gridType == "30-1") {
-    image.plot(seq(-90,90,6),seq(-54,54,6),f(summary$th),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="Eccentricity (°)",ylab="Eccentricity (°)",zlim=c(-1,35))
-    layout(matrix(c(1,rep(2,2)),1,3))
-    grid(nx=31,ny=19,col="white",lty="solid")
-    axis(1,at=c(seq(-90,-6,12),seq(6,90,12)))
-    axis(2,at=c(seq(-54,-6,12),seq(6,54,12)))
-  } else {
-    image.plot(seq(-87,87,6),seq(-51,51,6),f(summary$th),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="Eccentricity (°)",ylab="Eccentricity (°)",zlim=c(-1,35))
-    layout(matrix(c(1,rep(2,2)),1,3))
-    grid(nx=30,ny=18,col="white",lty="solid")
-    axis(1,at=c(seq(-87,-3,12),seq(3,87,12)))
-    axis(2,at=c(seq(-51,-3,12),seq(3,51,12)))
-  }
+  image.plot(1:ncol(disp),1:nrow(disp),f(disp),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="",ylab="",zlim=c(-4,35))
+  layout(matrix(c(1,rep(2,2)),1,3))
+  grid(nx=ncol(disp),ny=nrow(disp),col="white",lty="solid")
   
   thresholds <- round(summary$th)
   if (!is.null(summary$thOutliers)) {
@@ -158,7 +144,7 @@ testStatusFinal <- function (summary) {
     outliers <- apply(outliersIndex,1, function (x) {paste(thresholds[x[1],x[2]],"(",round(summary$thOutliers[x[1],x[2]]),")",sep="")})
     thresholds[outliersIndex] <- outliers
   }
-  text(combos[,1], combos[,2],as.vector(t(thresholds)),col="blue",font=2,cex=0.81)
+  text(combos[,1], combos[,2],as.vector(t(disp)),col="blue",font=2,cex=2)
 }
 
 

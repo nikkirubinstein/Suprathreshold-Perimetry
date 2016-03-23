@@ -2,125 +2,31 @@
 # for simulation
 ####################################
 require(OPI)
-#chooseOpi("SimHenson")
+chooseOpi("SimHenson")
 #chooseOpi("SimGaussian")
-chooseOpi("SimYes")
+#chooseOpi("SimYes")
 #chooseOpi("SimNo")
 #opiInitialize(sd=1)
 opiInitialize(type="C", cap=6, display=NULL)
 source("query_patient_details.r")
 gRunning <- TRUE
 
-Peripheral_TT <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA, NA,  30,    30, NA, NA,  30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA, NA, NA,   NA, NA, NA,  30, NA,  3, NA,  3, NA,  30, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA,   NA, NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA,  30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  30, NA,  1, NA,  30, NA,  3, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA,  30, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA,  3, NA, NA,  30, NA,
-  NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA, NA,  3, NA, NA,  30,
-                         
-  NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA, NA,  3, NA, NA,  30,
-  NA, NA, NA, NA, NA, NA,  30, NA,  30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA,  30, NA,  3, NA,  3, NA, NA,  30, NA,
-  NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA,  30, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  1, NA, NA, NA, NA,   NA, NA, NA, NA,  30, NA,  1, NA,  30, NA,  3, NA,  30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA, NA,   NA, NA, NA,  30, NA,  30, NA,  3, NA,  3, NA, NA, NA,  30, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA,   NA, NA,  30, NA,  30, NA, NA, NA, NA, NA,  3, NA,  30, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  3, NA, NA,  30,    30, NA, NA,  3, NA, NA,  3, NA,  30, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA,  30, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  30, NA,  30,    30, NA,  30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=18, ncol=30, byrow=TRUE)
+Peripheral_TT <- testPattern(grid.peripheral.coords)
+Peripheral_TT[14815] <- 30
 
-#TT <- matrix(c(
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 0,   30, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 10, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
-#  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
-                         
-#  NA, NA, NA, NA, NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, 30, NA, NA, 30,
-#  NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, NA, 30, NA,
-#  NA, NA, NA, NA, NA, NA, NA, 30, NA, 10, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA, NA,   NA, NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA, NA,   NA, NA, NA, 30, NA, 30, NA, 30, NA, 30, NA, NA, NA, 30, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,   NA, NA, 0, NA, 30, NA, NA, NA, NA, NA, 30, NA, 30, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, 30,   30, NA, NA, 30, NA, NA, 30, NA, 30, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, 30, NA, NA, NA, NA, NA, NA, NA,
-#  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 30, NA, 30,   0, NA, 30, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-#), nrow=18, ncol=30, byrow=TRUE)
+TT.30.1 <- testPattern(grid.30.1.coords)
+TT.30.1[which(TT.30.1 == 2)] <- 30
 
-TT.30.1 <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  25, 1,  20,  15, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  25,  2, NA,  24, NA, NA,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2, 25,  15, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  2,  2,  2,  2,  2,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4,  3,  3,  3,  3,  3,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  20,  4,  3,  4,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  4, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=19, ncol=31, byrow=TRUE) 
+TT.30.2 <- testPattern(grid.30.2.coords)
+TT.30.2[which(TT.30.2 == 2)] <- 30
 
-TT.30.2 <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,    35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,    35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,    35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35, NA,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35, NA,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,  35,    35,  35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,  35,    35,  35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,  35,    35,  35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  35,  35,    35,  35, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=18, ncol=30, byrow=TRUE)
+TT.24.2 <- testPattern(grid.24.2.coords)
+TT.24.2[which(TT.24.2 == 1)] <- 30
 
+TT.G1 <- testPattern(grid.G1.coords)
+TT.G1[which(TT.G1 == 1)] <- 30
 
-tt.practice <- matrix(c(
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA,  1, NA, NA, NA, NA,  1,   NA, NA, NA, NA,  1, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,    1, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  1, NA, NA,   NA, NA, NA, NA, NA, NA,  1, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  1, NA, NA, NA,   NA, NA,  1, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,   NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA
-), nrow=18, ncol=30, byrow=TRUE)
+tt.practice <- testPattern(grid.practice.coords)
 
 ###############################################################################################
 #
@@ -151,13 +57,19 @@ if (details$gridType == "Peripheral") {
   TT <- TT.30.1
 } else if (details$gridType == "30-2") {
   TT <- TT.30.2
+} else if (details$gridType == "G1") {
+  TT <- TT.G1
+} else if (details$gridType == "24-2") {
+  TT <- TT.24.2
+} else if (details$gridType == "practice") {
+  TT <- tt.practice
 }
 
 if (details$eye == "left") {
   TT <- grid.flip(TT)
 }
 
-  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
+  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,outlierValue=5,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()

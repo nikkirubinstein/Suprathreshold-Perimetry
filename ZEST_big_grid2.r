@@ -6,7 +6,7 @@
 # is fixed. The guess for the primary points (+-9,+-9) is passed in as a
 # parameter to runBiModalZEST().
 #
-# The domain of the prior is -5:40 dB, which you might want to change.
+# The domain of the prior is -5:45 dB, which you might want to change.
 #
 # See example usage at end of file. 
 #
@@ -48,9 +48,9 @@
 #         25 Jan 2016: Created adaptive interStimInterval based on observer's response times.
 
 
-rm(list=ls()) 
-source("growthPattern2.r")
+rm(list=ls())
 source("grids2.r")
+source("growthPattern2.r")
 source("pauseButton.r")
 source("testStatusOutput.r")
 #########################################################################
@@ -88,33 +88,50 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     
     if (gridType == "Peripheral") {
         if (eye == "right") {
-            growthPattern <- grid.peripheral
+            growthPattern <- testPattern(grid.peripheral.coords)
+            growthNext <- growth_lookup(grid.peripheral.coords)
         } else {
-            growthPattern <- grid.flip(grid.peripheral)
+            growthPattern <- grid.flip(testPattern(grid.peripheral.coords))
+            growthNext <- growth_lookup(grid.peripheral.coords, invert = TRUE)
         }
     } else if (gridType == "30-2") {
         if (eye == "right") {
-            growthPattern <- grid.30.2
+            growthPattern <- testPattern(grid.30.2.coords)
+            growthNext <- growth_lookup(grid.30.2.coords)
         } else {
-            growthPattern <- grid.flip(grid.30.2)
+            growthPattern <- grid.flip(testPattern(grid.30.2.coords))
+            growthNext <- growth_lookup(grid.30.2.coords, invert = TRUE)
         }
     } else if (gridType == "24-2") {
         if (eye == "right") {
-            growthPattern <- grid.24.2
+            growthPattern <- testPattern(grid.24.2.coords)
+            growthNext <- growth_lookup(grid.24.2.coords)
         } else {
-            growthPattern <- grid.flip(grid.24.2)
+            growthPattern <- grid.flip(testPattern(grid.24.2.coords))
+            growthNext <- growth_lookup(grid.24.2.coords, invert = TRUE)
         }
     } else if (gridType == "30-1") {
         if (eye == "right") {
-            growthPattern <- grid.30.1
+            growthPattern <- testPattern(grid.30.1.coords)
+            growthNext <- growth_lookup(grid.30.1.coords)
         } else {
-            growthPattern <- grid.flip(grid.30.1)
+            growthPattern <- grid.flip(testPattern(grid.30.1.coords))
+            growthNext <- growth_lookup(grid.30.1.coords, invert =  TRUE)
         }
-    } else if (gridType == "practice") {
+    } else if (gridType == "G1") {
         if (eye == "right") {
-            growthPattern <- grid.practice
+            growthPattern <- testPattern(grid.G1.coords)
+            growthNext <- growth_lookup(grid.G1.coords)
         } else {
-            growthPattern <- grid.flip(grid.practice)
+            growthPattern <- grid.flip(testPattern(grid.G1.coords))
+            growthNext <- growth_lookup(grid.G1.coords, invert =  TRUE)
+        }      
+    } else if (gridType == "practice") {
+        growthNext <- NULL
+        if (eye == "right") {
+            growthPattern <- testPattern(grid.practice.coords)
+        } else {
+            growthPattern <- grid.flip(testPattern(grid.practice.coords))
         }
     } else {
         stop("Invalid gridType for Zest242")
@@ -124,10 +141,8 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
 
         # check tt is in the right format
     if (is.matrix(tt)) {
-        if (gridType == "30-1" && (ncol(tt) != 31 || nrow(tt) != 19)) {
-          stop("Zest242(): tt is not an 19*31 matrix")
-        } else if ((ncol(tt) != 30 || nrow(tt) != 18) && gridType != "30-1"){
-            stop("Zest242(): tt is not an 18*30 matrix")
+        if (ncol(tt) != 181 || nrow(tt) != 109) {
+          stop("Zest242(): tt is not a 109*181 matrix")
         }
         z1 <- !is.na(growthPattern)
         z2 <- !is.na(tt)
@@ -149,10 +164,10 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     # This version assumes
     #  1) bi-modal prior, constructed as in 
     #     Turpin et al  IOVS 44(11), November 2003. Pages 4787-4795.
-    #  2) a domain of -5:40 dB
+    #  2) a domain of -5:45 dB
     #####################################################
     startF <- function(guess, rw, cl) {
-        domain <- -5:40 # note min(domain) should be <= 0 for bimodal pdf
+        domain <- -5:45 # note min(domain) should be <= 0 for bimodal pdf
 
         glaucomaPDF <- rep(0.001,length(domain))
         glaucomaPDF[1:(6+abs(domain[1]))] <- c(rep(0.001,abs(domain[1])),0.2, 0.3, 0.2, 0.15, 0.1, 0.02)
@@ -185,28 +200,18 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
                 , list(x=x,y=y))
             return(ff)
         }
-        if (details$gridType == "30-1") {
-          ms <- makeStimHelper(-6-14*6 + 6*(cl-1), 6+8*6 - (rw-1)*6)
-          state <- ZEST.start(domain=domain, prior=prior, makeStim=ms, 
+          
+        ms <- makeStimHelper(-6-14*6 + (cl-1), 6+8*6 - (rw-1))
+        state <- ZEST.start(domain=domain, prior=prior, makeStim=ms, 
                               minStimulus=0,
+                              maxStimulus=40,
                               tt=ifelse(!is.null(dim(tt)), tt[rw,cl], NA),
                               fpr=ifelse(!is.null(dim(tt)), fpv, NA),
                               fnr=ifelse(!is.null(dim(tt)), fnv, NA)
-          )
-          state$x <- -6-14*6 + 6*(cl-1)
-          state$y <- 6+8*6 - (rw-1)*6
-        } else {  
-            ms <- makeStimHelper(-3-14*6 + 6*(cl-1), 3+8*6 - (rw-1)*6)
-            state <- ZEST.start(domain=domain, prior=prior, makeStim=ms, 
-                    minStimulus=0,
-                    tt=ifelse(!is.null(dim(tt)), tt[rw,cl], NA),
-                    fpr=ifelse(!is.null(dim(tt)), fpv, NA),
-                    fnr=ifelse(!is.null(dim(tt)), fnv, NA)
-                   )
-            state$x <- -3-14*6 + 6*(cl-1)
-            state$y <- 3+8*6 - (rw-1)*6
-        }
-
+                              )
+        state$x <- -6-14*6 + (cl-1)
+        state$y <- 6+8*6 - (rw-1)
+        
         return(state)
     }
 
@@ -241,11 +246,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     ###################################################
     while (details$fovea == TRUE) {
       resFovea <- function () {
-        if (details$gridType == "30-1") {
-          state.fovea <- startF(primaryStartValue,10,16)
-        } else {
-          state.fovea <- startF(primaryStartValue,9.5,15.5)
-        }
+        state.fovea <- startF(primaryStartValue,55,91)
         state.fovea$opiParams$tt <- 30
         while (stopF(state.fovea) == FALSE) {
           Sys.sleep(runif(1, min=400, max=800)/1000)
@@ -253,22 +254,22 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
         }
         return(finalF(state.fovea)[1])   
       }
-      #opiSetBackground(fixation=.Octopus900Env$FIX_CROSS)
+      opiSetBackground(fixation=.Octopus900Env$FIX_CROSS,lum=.Octopus900Env$BG_10)
       pauseAtStartFovea() 
       fovealTH <- resFovea()
       fovealTestComplete(fovealTH)
     }
     
     windows(700,250)
-    #opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE)
+    opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE,lum=.Octopus900Env$BG_10)
     pauseAtStart()
     commence <<- Sys.time()
-    res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, onePriors, startF, stepF, stopF, finalF,
+    res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, growthNext, onePriors, startF, stepF, stopF, finalF,
             gridPat=growthPattern,
             respWinBuffer=250,
             FPLevel=dbTocd(55, 4000/pi), 
             FNDelta=10,
-            FNPause=500,
+            FNPause=300,
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
             FNSize=as.numeric(details$stimSize),
@@ -283,31 +284,33 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     # Calculate Difference between neighbours within each of the 4 quadrants
     # and identify outliers
     #########################################################################
-    NeighbourDifference <- function(vf,outlierValue,outlierFreq) {
-      neighbours <- list(
-        c(-1, -1), c(0, -1), c(+1, -1), 
-        c(-1,  0),           c(+1,  0), 
-        c(-1, +1), c(0, +1), c(+1, +1)
-      )
+    NeighbourDifference <- function(vf,outlierValue,outlierFreq,search_extent = 10) {
       
       result <- matrix(NA,nrow(vf),ncol(vf))
       for (i in list(1:(0.5*nrow(vf)),(0.5*nrow(vf)+1):nrow(vf))) {
         for (j in list(((0.5*ncol(vf)+1):ncol(vf)),(1:(0.5*ncol(vf))))) {
           quadrant <- vf[i,j]
           quadResult <- matrix(NA,nrow(quadrant),ncol(quadrant))
-          for(rr in 1:nrow(quadrant))
-            for(cc in 1:ncol(quadrant)) 
-              if (!is.na(quadrant[rr,cc])) {
+          locIndex <- which(!is.na(quadrant),arr.ind=TRUE)
+          for (rr in 1:nrow(locIndex)) {
+            deltas <- NULL
+            distances <- apply(locIndex, 1, function (t) {
+              round(sqrt((t[2] - locIndex[rr,2])^2 + (t[1] - locIndex[rr,1])^2))
+            })
+            neighbours <- locIndex[(distances > 0 & distances <= search_extent),]
+            neighbours <- matrix(neighbours,length(unlist(neighbours)) / 2,2)
             
-                deltas <- unlist(lapply(neighbours, function(p) {
-                  n <- p + c(rr,cc)
-                  if (all(n > 0) && all(n <= dim(quadrant)))
-                    abs(quadrant[rr,cc] - quadrant[rr+p[1], cc+p[2]])
-                }))
-                if (sum(deltas >= outlierValue, na.rm=TRUE) >= outlierFreq) {quadResult[rr,cc] <- 1}  
-              }
-          result[i,j] <- quadResult
+            if (nrow(neighbours) == 0) {
+              deltas <- NULL
+            } else {
+              deltas <- round(apply(neighbours, 1, function (t) {
+                abs(quadrant[locIndex[rr,1],locIndex[rr,2]] - quadrant[t[1],t[2]])
+              }))
+            }
+            if (sum(deltas >= outlierValue, na.rm=TRUE) >= outlierFreq) {quadResult[locIndex[rr,1],locIndex[rr,2]] <- 1}  
           }
+          result[i,j] <- quadResult
+        }
       }
       return(result)
     }
@@ -316,19 +319,18 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     # Re-test outliers
     ###########################################################
     outliers <- NeighbourDifference(tz,outlierValue,outlierFreq)
-    
     if (sum(outliers,na.rm=TRUE) > 0) {
       outlierPriors <- apply(outliers, 1:2, function(x) ifelse(is.na(x), NA, ifelse(x == 1, primaryStartValue, NA)))
       windows(width=700,height=250,ypos=300)
     
-      res2 <- procedureWithGrowthPattern(details$startTime,outliers, outlierPriors, startF, stepF, stopF, finalF, 
+      res2 <- procedureWithGrowthPattern(details$startTime,outliers, gn = NULL, outlierPriors, startF, stepF, stopF, finalF, 
             gridPat=growthPattern,
             respWinBuffer=250,
             catchTrialLoadFreq = 5000,
             catchTrialFreq=5000,
             FPLevel=dbTocd(55, 4000/pi), 
             FNDelta=10,
-            FNPause=500,
+            FNPause=300,
             FNLocationThreshold=20,
             FPSize=as.numeric(details$stimSize),
             FNSize=as.numeric(details$stimSize),
@@ -346,6 +348,28 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
       res <- list(np=res1$n, ae=abs(tz-tt), th=res1$t,thOutliers=res2$t,npOutliers=res2$n,trues=tt,fp_counter=res1$fpc,fn_counter=res1$fnc,fp_outliers=res2$fpc,fn_outliers=res2$fnc,rt=res1$rt,rtOutliers=res2$rt)
     }
     return(res)
+}
+
+###########################################################################################
+# Function which sets the primary start value for BM priors
+# depending on test pattern/target size combination.
+# NOTE: Procedure breaks down if PSV > 30. PSV must be 30 dB or lower.
+###########################################################################################
+setPSV <- function (grid,size) {
+  if ((grid == "30-1") && (size == "V")) {
+    PSV <- 33
+  } else if (grid == "30-2") {
+    if (size == "III") {PSV <- 28} 
+    else if (size == "V") {PSV <- 33} 
+    else {PSV <- 30}
+  } else if (grid == "Peripheral") {
+    if (size == "V") {PSV <- 30} 
+    else if (size == "VI") {PSV <- 32} 
+    else {PSV <- 30} 
+  } else {
+    PSV <- 30
+  }
+  return(PSV)
 }
 
 ######################################################################
@@ -383,13 +407,13 @@ writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$
    } 
 
   cat("\n#Thresholds\n", file=filename, append=TRUE)
-  write.table(round(z$th), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
+  write.table(round(z$th[apply(z$th,1,function (x) !all(is.na(x))),apply(z$th,2,function (x) !all(is.na(x)))]), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
   if (!is.null(z$thOutliers)){
     cat("\n#Outlier Thresholds\n", file=filename, append=TRUE)
-    write.table(round(z$thOutliers), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
+    write.table(round(z$thOutliers[apply(z$th,1,function (x) !all(is.na(x))),apply(z$th,2,function (x) !all(is.na(x)))]), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
    }
   cat("\n#Num Presentations\n", file=filename, append=TRUE)
-  write.table(z$np, file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
+  write.table(z$np[apply(z$np,1,function (x) !all(is.na(x))),apply(z$np,2,function (x) !all(is.na(x)))], file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
   cat("\n", file=filename, append=TRUE)
 }
 
@@ -411,15 +435,10 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
       th <- grid.flip(z$th)
     } else {th <- z$th}
     for (rw in 1:nrow(th)) {
-    
       for (cl in 1:ncol(th)) {
         if (!is.na(th[rw,cl])) {
           t <- cbind(t,round(th[rw,cl]))
-          if (details$gridType == "30-1") {
-            colnames(t)[ncol(t)] <- paste(-6-14*6 + 6*(cl-1),6+8*6 - (rw-1)*6,sep=",")
-          } else {
-            colnames(t)[ncol(t)] <- paste(-3-14*6 + 6*(cl-1),3+8*6 - (rw-1)*6,sep=",")
-          }
+          colnames(t)[ncol(t)] <- paste(-6-14*6 + (cl-1),6+8*6 - (rw-1),sep=",")
         }
       }
     }
@@ -460,11 +479,7 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
     outlierIndex <- which(!is.na(outs),arr.ind=TRUE)
     for (i in 1:nrow(outlierIndex)) {
       round(outs[outlierIndex[i,][1],outlierIndex[i,][2]])
-      if (details$gridType == "30-1") {
-        output[,paste(-6-14*6 + 6*(outlierIndex[i,2]-1),6+8*6 - (outlierIndex[i,1]-1)*6,sep=",")] <- paste(output[,paste(-6-14*6 + 6*(outlierIndex[i,2]-1),6+8*6 - (outlierIndex[i,1]-1)*6,sep=",")], "(",round(outs[outlierIndex[i,][1],outlierIndex[i,][2]]),")",sep="")
-      } else {
-        output[,paste(-3-14*6 + 6*(outlierIndex[i,2]-1),3+8*6 - (outlierIndex[i,1]-1)*6,sep=",")] <- paste(output[,paste(-3-14*6 + 6*(outlierIndex[i,2]-1),3+8*6 - (outlierIndex[i,1]-1)*6,sep=",")], "(",round(outs[outlierIndex[i,][1],outlierIndex[i,][2]]),")",sep="")
-      }
+      output[,paste(-6-14*6 + (outlierIndex[i,2]-1),6+8*6 - (outlierIndex[i,1]-1),sep=",")] <- paste(output[,paste(-6-14*6 + (outlierIndex[i,2]-1),6+8*6 - (outlierIndex[i,1]-1),sep=",")], "(",round(outs[outlierIndex[i,][1],outlierIndex[i,][2]]),")",sep="")
     }
   }
   
@@ -473,28 +488,6 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
   } else {
     write.table(output,file=filename,append=TRUE,row.names=FALSE,sep=",")
   }
-}
-
-###########################################################################################
-# Function which sets the primary start value for BM priors
-# depending on test pattern/target size combination.
-# NOTE: Procedure breaks down if PSV > 30. PSV must be 30 dB or lower.
-###########################################################################################
-setPSV <- function (grid,size) {
-  if ((grid == "30-1") && (size == "V")) {
-    PSV <- 30
-  } else if (grid == "30-2") {
-      if (size == "III") {PSV <- 28} 
-        else if (size == "V") {PSV <- 30} 
-          else {PSV <- 30}
-  } else if (grid == "Peripheral") {
-      if (size == "V") {PSV <- 30} 
-        else if (size == "VI") {PSV <- 30} 
-          else {PSV <- 30} 
-  } else {
-    PSV <- 30
-  }
-  return(PSV)
 }
 
 ###########################################################################################
@@ -523,6 +516,11 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
     if (details$stimSizeRoman == "III") {pattern <- "peripheral"}
     if (details$stimSizeRoman == "V") {pattern <- "peripheralv"}
     if (details$stimSizeRoman == "VI") {pattern <- "peripheralvi"}
+  }
+  if (details$gridType == "G1") {
+    if (details$stimSizeRoman == "III") {pattern <- "pG1"}
+    if (details$stimSizeRoman == "V") {pattern <- "pG1v"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pG1vi"}
   }
 
   output <- data.frame(id=details$name,
@@ -608,59 +606,59 @@ px_database <- function (details) {
 ####################################
 # Example Usage
 ####################################
-#require(OPI)
-#chooseOpi("Octopus900")
-#source("query_patient_details.r")
+require(OPI)
+chooseOpi("Octopus900")
+source("query_patient_details.r")
 
-#gRunning <- TRUE
+gRunning <- TRUE
 
-#details <- practiceQuery()
+details <- practiceQuery()
 
-#while (details$practice == TRUE) {
-#  gRunning <- TRUE
-#  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-#  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
-#  tkdestroy(tt)
-#  pracTestComplete()
-#  dev.off()
-#  details <- practiceQuery()
-#  opiClose()
-#}
+while (details$practice == TRUE) {
+  gRunning <- TRUE
+  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
+  tkdestroy(tt)
+  pracTestComplete()
+  dev.off()
+  details <- practiceQuery()
+  opiClose()
+}
 
-#gRunning <- TRUE # reset gRunning in case practice test was terminated early
-#details <- inputs()
-#if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
-#opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
-#PSV <- setPSV(details$gridType,details$stimSizeRoman)
+gRunning <- TRUE # reset gRunning in case practice test was terminated early
+details <- inputs()
+if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
+opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
-#if (details$gridType == "Peripheral") { 
-#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=5,outlierFreq=1,minInterStimInterval=0,moveProjector = TRUE)
-#} else {
-#  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=5,outlierFreq=1,minInterStimInterval=300,moveProjector = TRUE)
-#}
+if (details$gridType == "Peripheral") { 
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=6,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
+} else {
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=6,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
+}
 
-#terminate <- Sys.time()
-#tkdestroy(tt)  # closes the pause button upon completion of the test
-#opiClose()
-#graphics.off()
+terminate <- Sys.time()
+tkdestroy(tt)  # closes the pause button upon completion of the test
+opiClose()
+graphics.off()
 
-#if (gRunning) {
-#windows(900,350)
-#testStatusFinal(z)
-#pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
-#testStatusFinal(z)
-#dev.off()
-#testComplete()
-#}
+if (gRunning) {
+windows(900,350)
+testStatusFinal(z)
+pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+testStatusFinal(z)
+dev.off()
+testComplete()
+}
 
-#if (gRunning) {
-#  comments <- finalComments()
-#  details$comments <- paste(details$comments,comments,sep=".")
-#  writeFile()
-#  writeFile2(details)
-#  writeFile3(details)
-#  px_database(details)
-#}
+if (gRunning) {
+  comments <- finalComments()
+  details$comments <- paste(details$comments,comments,sep=".")
+  writeFile()
+  writeFile2(details)
+  writeFile3(details)
+  px_database(details)
+}
 
-#opiClose()
-source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
+opiClose()
+#source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
