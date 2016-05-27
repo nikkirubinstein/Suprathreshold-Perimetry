@@ -46,7 +46,7 @@
 #         15 Jan 2016: Added ability to load details of previous patients at the input screen.
 #         21 Jan 2016: Projector moves to next stimulus position whilst observer is responding (peripheral test only)
 #         25 Jan 2016: Created adaptive interStimInterval based on observer's response times.
-
+#         25 Apr 2016: Integrated procedure with the visualFields package
 
 rm(list=ls())
 source("grids2.r")
@@ -380,7 +380,7 @@ setPSV <- function (grid,size) {
 # filename        - name of the output file
 #
 ######################################################################
-writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv",sep="")) {
+writeFile <- function (filename = paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv",sep="")) {
   px_info <- data.frame(stringsAsFactors=FALSE)
   labels <- c("#ID:","#Age:","#Diagnosis:","#Manifest Refraction:","#Over-refraction:","#VA:","#Comments:","#Grid Type:","#Stimulus Size:","#Eye:")
   px_info <- data.frame(cbind(c(px_info,labels)))
@@ -423,7 +423,7 @@ writeFile <- function (filename = paste(details$dx,"/",details$name,"_",details$
 # 
 #
 ##########################################################################################################################
-writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,".csv")) {
+writeFile2 <- function (details,filename = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,".csv")) {
   
   #################################################################################
   # Arrange thresholds into an appropriate format
@@ -492,10 +492,10 @@ writeFile2 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
 
 ###########################################################################################
 # Function which writes a .csv file in a format that can be used in the "visualFields"
-# package
+# package and creates printout using visualFields package
 #
 ###########################################################################################
-writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")) {
+writeFile3 <- function (details,filename = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")) {
   
   if (details$gridType == "24-2") {
     if (details$stimSizeRoman == "III") {pattern <- "p24d2"}
@@ -538,7 +538,13 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
                      sfn = round(sum(z$fn_counter,na.rm=TRUE)/length(z$fn_counter),digits=2),
                      sfl = 0,
                      sduration = format(.POSIXct(difftime(terminate,commence,units="secs") - timePaused,tz="GMT"),"%H:%M:%S"),
-                     spause = format(.POSIXct(timePaused,tz="GMT"),"%H:%M:%S"))
+                     spause = format(.POSIXct(timePaused,tz="GMT"),"%H:%M:%S"),
+                     fovth = ifelse(!is.null(z$thFovea),round(z$thFovea),NA),
+                     np = sum(c(unlist(z$np),unlist(z$npOutliers)),na.rm=TRUE),
+                     outnp = sum(unlist(z$npOutliers),na.rm=TRUE),
+                     mistakes = mistakes,
+                     deleted = deletes, 
+                     comments = details$comments)
 
   if (details$eye == "left") {
       th <- grid.flip(z$th)
@@ -559,7 +565,7 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
   }
   
   if (details$gridType == "30-2") { # add blind spot locations to 30-2 grid
-  thresholds <- c(thresholds[1:35],NA,thresholds[36:44],NA,thresholds[45:length(thresholds)])
+  thresholds <- c(thresholds[1:35],0,thresholds[36:44],0,thresholds[45:length(thresholds)])
   thresholds <- matrix(thresholds,1,length(thresholds))
   }
   colnames(thresholds) <- sapply(1:ncol(thresholds), function (x) {paste0("L",x)})
@@ -570,6 +576,7 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$dx,"_",
   } else {
     write.table(finalOutput,file=filename,append=TRUE,row.names=FALSE,sep=",",na="")
   }
+
 }
 
 #####################################################################################################
@@ -627,14 +634,14 @@ while (details$practice == TRUE) {
 
 gRunning <- TRUE # reset gRunning in case practice test was terminated early
 details <- inputs()
-if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
+if (dir.exists(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman)) == FALSE) {dir.create(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman),recursive = TRUE)}
 opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
 PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
 if (details$gridType == "Peripheral") { 
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=6,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
 } else {
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=6,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
 }
 
 terminate <- Sys.time()
@@ -645,7 +652,7 @@ graphics.off()
 if (gRunning) {
 windows(900,350)
 testStatusFinal(z)
-pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
 testStatusFinal(z)
 dev.off()
 testComplete()
@@ -658,6 +665,30 @@ if (gRunning) {
   writeFile2(details)
   writeFile3(details)
   px_database(details)
+  
+  ###################################################################################################
+  # Create printout of data using visualFields package
+  ###################################################################################################
+  library(visualFields)
+  ################################################################################
+  # load patches to visualFields, as new normative values, locations map, etc here
+  ################################################################################
+  load("nvsapmw.rda")
+  load( "vfsettingsmw.rda" )
+  source( "vflayoutmw_singleField.r" )
+
+  #CARE!!! set appropriate normative values
+  setnv( "nvsapmw" )
+
+  #load data
+  filename <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")
+  loadfile <- read.csv(filename)
+  vf <- loadvfcsv( filename = filename, patternMap = eval(parse(text = paste0("saplocmap$",as.character((tail(loadfile$tpattern,1)))))))
+
+  #generate unique file name for printout
+  fname <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_visualFields.pdf")
+  #save printout
+  vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
 }
 
 opiClose()

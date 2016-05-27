@@ -44,7 +44,7 @@ while (details$practice == TRUE) {
 }
 
 details <- inputs()
-if (dir.exists(details$dx) == FALSE) {dir.create(details$dx)}
+if (dir.exists(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman)) == FALSE) {dir.create(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman),recursive = TRUE)}
 np <- NULL
 PSV <- setPSV(details$gridType,details$stimSizeRoman)
 #trials <- 500
@@ -79,7 +79,7 @@ graphics.off()
 if (gRunning) {
   windows(900,350)
   testStatusFinal(z)
-  pdf(file = paste(details$dx,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf",sep=""),width=14,height=6)
+  pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
   testStatusFinal(z)
   dev.off()
   testComplete()
@@ -92,5 +92,31 @@ if (gRunning) {
   writeFile2(details)
   writeFile3(details)
   px_database(details)
+  
+  ###################################################################################################
+  # Create printout of data using visualFields package
+  ###################################################################################################
+  library(visualFields)
+  ################################################################################
+  # load patches to visualFields, as new normative values, locations map, etc here
+  ################################################################################
+  load("nvsapmw.rda")
+  load( "vfsettingsmw.rda" )
+  source( "vflayoutmw_singleField.r" )
+  
+  #CARE!!! set appropriate normative values
+  setnv( "nvsapmw" )
+  
+  #load data
+  filename <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")
+  loadfile <- read.csv(filename)
+  vf <- loadvfcsv( filename = filename, patternMap = eval(parse(text = paste0("saplocmap$",as.character((tail(loadfile$tpattern,1)))))))
+  
+  #generate unique file name for printout
+  fname <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_visualFields.pdf")
+  #save printout
+  vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
 }
+
+
 

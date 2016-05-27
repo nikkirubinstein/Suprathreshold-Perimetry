@@ -206,6 +206,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         } else {
           print('removing a terminated location')
           myEnv$locs <- c(locs,list(c(rr,cc)))
+          myEnv$finished_counter <- finished_counter - 1
         }
         
         # check for locations with repeated deletions. 
@@ -223,7 +224,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         }
         myEnv$locsPresented <- locsPresented[-nrow(locsPresented),]
         gUndos <<- gUndos - 1
-        cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+        cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
             append=TRUE,paste("Presentation at location x =",states[[rr,cc]]$x,"y =",states[[rr,cc]]$y,"was deleted\n",sep=" "))
       }
 
@@ -280,6 +281,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
     # loop while still some unterminated locations
     ####################################################################
     while (length(locs) > 0 && gRunning) {
+        start_time <- Sys.time()
         applyUndos()
       
         if ((counter <= 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 != 0)) ||
@@ -297,8 +299,8 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
             
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,testGrid = gridPat)
             if (details$gridType != "practice") {
-            cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time))
+            cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time, round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
             }
             counter <- counter + 1
         }
@@ -311,8 +313,8 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
             fn_counter <- c(fn_counter, result$seen == FALSE)
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime, testGrid = gridPat)
             if (details$gridType != "practice") {
-              cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Time: %5.2f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time))
+              cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f\n Trial Time: %.0f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time,round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
             }
             
           counter <- counter + 1
@@ -355,19 +357,20 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         
         testStatus(tail(states[[rw,cl]]$responses,1),currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime, testGrid = gridPat)
         if (details$gridType != "practice") {
-          cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-          append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f\n", states[[rw,cl]]$x, states[[rw,cl]]$y, 
-            tail(states[[rw,cl]]$stimuli,1), tail(states[[rw,cl]]$responses,1), tail(states[[rw,cl]]$responseTimes,1)))
+          cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+          append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", states[[rw,cl]]$x, states[[rw,cl]]$y, 
+            tail(states[[rw,cl]]$stimuli,1), tail(states[[rw,cl]]$responses,1), tail(states[[rw,cl]]$responseTimes,1),round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
         }
         
         if (length(locs) == 1) {
+          dummy_start_time <- Sys.time()
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
           if (details$gridType != "Peripheral") {interStimInt(respTime,minInterStimInt)}
           
           if (details$gridType != "practice") {
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime, testGrid = gridPat)
-            cat(file=paste(details$dx,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-              append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Time: %5.2f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,"(Dummy Trial)"))
+            cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+              append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,round(difftime(Sys.time(),dummy_start_time,units = "secs")) * 1000,"(Dummy Trial)"))
           }
         }
         

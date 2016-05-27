@@ -1,6 +1,8 @@
 require(tcltk)
 
 timePaused <- 0
+mistakes <- 0
+deletes <- 0
 
 mywait <- function() {
   tt <- tktoplevel()
@@ -51,6 +53,8 @@ mywait <- function() {
     submit.but <- tkbutton(tt, text="   Submit   ", command= function () {
       e <- undo[[as.numeric(tclvalue(tcl(comboBox,"getvalue")))+1]]
       gUndos <<- e
+      deletes <<- deletes + e
+      mistakes <<- mistakes + 1
       tkdestroy(tt)
       tkmessageBox(title = "", message = paste("The last",e,"presentations have been deleted",sep=" "), icon = "warning")
       mywait()
