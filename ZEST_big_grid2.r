@@ -47,6 +47,7 @@
 #         21 Jan 2016: Projector moves to next stimulus position whilst observer is responding (peripheral test only)
 #         25 Jan 2016: Created adaptive interStimInterval based on observer's response times.
 #         25 Apr 2016: Integrated procedure with the visualFields package
+#         28 Apr 2016: Threshold Censoring and addition of new polar grids
 
 rm(list=ls())
 source("grids2.r")
@@ -63,7 +64,7 @@ source("testStatusOutput.r")
 #   outlierValue        is >= outlierValue, that location is flagged as an outlier and is re-tested
 #
 #   If running in simulation mode you need to specify 
-#     tt - an 8*9 matrix 24-2 field OD (blind spot on right) 
+#     tt - an 109*181 matrix 24-2 field OD (blind spot on right) 
 #     fpv - false positive rate in range [0,1]
 #     fnv - false negative rate in range [0,1]
 #   
@@ -126,6 +127,46 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             growthPattern <- grid.flip(testPattern(grid.G1.coords))
             growthNext <- growth_lookup(grid.G1.coords, invert =  TRUE)
         }      
+    } else if (gridType == "P-Total") {
+        if (eye == "right") {
+            growthPattern <- testPattern(grid.PTotal.coords)
+            growthNext <- growth_lookup(grid.PTotal.coords, searchExt = 12)
+        } else {
+            growthPattern <- grid.flip(testPattern(grid.PTotal.coords))
+            growthNext <- growth_lookup(grid.PTotal.coords, searchExt = 12, invert =  TRUE)
+        } 
+    } else if (gridType == "P-Central10") {
+        if (eye == "right") {
+            growthPattern <- testPattern(grid.PCentral10.coords)
+            growthNext <- growth_lookup(grid.PCentral10.coords, searchExt = 5)
+        } else {
+            growthPattern <- grid.flip(testPattern(grid.PCentral10.coords))
+            growthNext <- growth_lookup(grid.PCentral10.coords, searchExt = 5, invert =  TRUE)
+        } 
+    } else if (gridType == "P-Central26") {
+        if (eye == "right") {
+            growthPattern <- testPattern(grid.PCentral26.coords)
+            growthNext <- growth_lookup(grid.PCentral26.coords, searchExt = 12)
+        } else {
+            growthPattern <- grid.flip(testPattern(grid.PCentral26.coords))
+            growthNext <- growth_lookup(grid.PCentral26.coords, searchExt = 12, invert =  TRUE)
+        } 
+    } else if (gridType == "P-Peripheral") {
+        if (eye == "right") {
+            growthPattern <- testPattern(grid.PPeri.coords)
+            growthNext <- growth_lookup(grid.PPeri.coords, searchExt = 12)
+        } else {
+            growthPattern <- grid.flip(testPattern(grid.PPeri.coords))
+            growthNext <- growth_lookup(grid.PPeri.coords, searchExt = 12, invert =  TRUE)
+        } 
+    } else if (gridType == "P-Edge") {
+      if (eye == "right") {
+        growthPattern <- testPattern(grid.PEdge.coords)
+        growthNext <- growth_lookup(grid.PEdge.coords, searchExt = 16)
+      } else {
+        growthPattern <- grid.flip(testPattern(grid.PEdge.coords))
+        growthNext <- growth_lookup(grid.PEdge.coords, searchExt = 16, invert =  TRUE)
+      } 
     } else if (gridType == "practice") {
         growthNext <- NULL
         if (eye == "right") {
@@ -167,12 +208,24 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     #  2) a domain of -5:45 dB
     #####################################################
     startF <- function(guess, rw, cl) {
-        domain <- -5:45 # note min(domain) should be <= 0 for bimodal pdf
+        
+        # censor thresholds
+        if (any(details$gridType == c("P-Total","P-Central10","P-Central26","P-Peripheral","P-Edge"))) {
+          minDomain <- 10
+        } else {
+          minDomain <- -5
+        }
+      
+        domain <- minDomain:45 # note min(domain) should be <= 0 for bimodal pdf
 
         glaucomaPDF <- rep(0.001,length(domain))
-        glaucomaPDF[1:(6+abs(domain[1]))] <- c(rep(0.001,abs(domain[1])),0.2, 0.3, 0.2, 0.15, 0.1, 0.02)
+        glaucomaPDF[1:10] <- c(rep(0.001,4),0.2, 0.3, 0.2, 0.15, 0.1, 0.02) #BM PRIOR
+        #glaucomaPDF[1] <- 0.2 #custom
+        #glaucomaPDF[1:6] <- c(0.2, 0.3, 0.2, 0.15, 0.1, 0.02) # BM2 PRIOR
+        #uniformPDF <- rep(0.001,length(domain))
+        #gaussPDF <- dnorm(domain,guess,6)
         healthyPDF  <- function (normalModePoint) {
-            temp <- c(rep(0.001,50), 0.009, 0.03, 0.05, 0.1, 0.2, 0.3, 0.2, 0.05, 0.025, 0.01,rep(0.001,50))
+            temp <- c(rep(0.001,50), 0.001, 0.03, 0.05, 0.1, 0.2, 0.3, 0.2, 0.05, 0.025, 0.01,rep(0.001,50))
             mode <- which.max(temp)
             return(temp[(mode-normalModePoint+domain[1]):(mode-normalModePoint+domain[length(domain)])])
         }
@@ -183,6 +236,9 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
           return (cpdf)
         }	
         prior <- makeBiModalPDF(round(guess),4,0.001)
+        #prior <- uniformPDF
+        #prior <- gaussPDF
+        #prior[which(prior < 0.001)] <- 0.001
         prior <- prior/sum(prior)
       
         ###### helps create the makeStim function needed for the OPI
@@ -275,17 +331,16 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             FNSize=as.numeric(details$stimSize),
             moveProj = moveProjector,
             minInterStimInt = minInterStimInterval)
-    
-    z <- res1$t < 0
+
+    #z <- res1$t < 0
     tz <- res1$t
-    tz[z] <- 0
+    #tz[z] <- 0
     
     #########################################################################
     # Calculate Difference between neighbours within each of the 4 quadrants
     # and identify outliers
     #########################################################################
     NeighbourDifference <- function(vf,outlierValue,outlierFreq,search_extent = 10) {
-      
       result <- matrix(NA,nrow(vf),ncol(vf))
       for (i in list(1:(0.5*nrow(vf)),(0.5*nrow(vf)+1):nrow(vf))) {
         for (j in list(((0.5*ncol(vf)+1):ncol(vf)),(1:(0.5*ncol(vf))))) {
@@ -337,9 +392,9 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             moveProj = moveProjector,
             minInterStimInt = minInterStimInterval)
       
-      q <- res2$t < 0
+      #q <- res2$t < 0
       tq <- res2$t
-      tq[q] <- 0
+      #tq[q] <- 0
     } else {res2 <- list(n = 0)}
     
     if (exists("fovealTH")) {
@@ -522,7 +577,33 @@ writeFile3 <- function (details,filename = paste0(details$dx,"/",details$gridTyp
     if (details$stimSizeRoman == "V") {pattern <- "pG1v"}
     if (details$stimSizeRoman == "VI") {pattern <- "pG1vi"}
   }
-
+  if (details$gridType == "P-Total") {
+    if (details$stimSizeRoman == "III") {pattern <- "pPT"}
+    if (details$stimSizeRoman == "V") {pattern <- "pPTv"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pPTvi"}
+  } 
+  if (details$gridType == "P-Central10") {
+    if (details$stimSizeRoman == "III") {pattern <- "pPC10"}
+    if (details$stimSizeRoman == "V") {pattern <- "pPC10v"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pPC10vi"}
+  }
+  if (details$gridType == "P-Central26") {
+    if (details$stimSizeRoman == "III") {pattern <- "pPC26"}
+    if (details$stimSizeRoman == "V") {pattern <- "pPC26v"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pPC26vi"}
+  } 
+  if (details$gridType == "P-Peripheral") {
+    if (details$stimSizeRoman == "III") {pattern <- "pPeri"}
+    if (details$stimSizeRoman == "V") {pattern <- "pPeriv"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pPerivi"}
+  }
+  if (details$gridType == "P-Edge") {
+    if (details$stimSizeRoman == "III") {pattern <- "pEdge"}
+    if (details$stimSizeRoman == "V") {pattern <- "pEdgev"}
+    if (details$stimSizeRoman == "VI") {pattern <- "pEdgevi"}
+  }
+  
+    
   output <- data.frame(id=details$name,
                      tperimetry = "sap",
                      talgorithm = "zest",
@@ -617,13 +698,19 @@ require(OPI)
 chooseOpi("Octopus900")
 source("query_patient_details.r")
 
+    # extra opiInitialize to light up bowl before procedure starts
+opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye="right",gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
+
 gRunning <- TRUE
 
 details <- practiceQuery()
 
 while (details$practice == TRUE) {
   gRunning <- TRUE
-  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+  if (details$eye != "right") {
+     opiClose()  
+     opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
+  }
   Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
   tkdestroy(tt)
   pracTestComplete()
@@ -635,14 +722,10 @@ while (details$practice == TRUE) {
 gRunning <- TRUE # reset gRunning in case practice test was terminated early
 details <- inputs()
 if (dir.exists(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman)) == FALSE) {dir.create(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman),recursive = TRUE)}
-opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE)
+opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE, resp_buzzer = 3)
 PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
-if (details$gridType == "Peripheral") { 
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
-} else {
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
-}
+z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
 
 terminate <- Sys.time()
 tkdestroy(tt)  # closes the pause button upon completion of the test
@@ -660,36 +743,39 @@ testComplete()
 
 if (gRunning) {
   comments <- finalComments()
-  details$comments <- paste(details$comments,comments,sep=".")
+  details$comments <- paste(details$comments,comments,sep=" ")
   writeFile()
   writeFile2(details)
   writeFile3(details)
   px_database(details)
-  
-  ###################################################################################################
-  # Create printout of data using visualFields package
-  ###################################################################################################
-  library(visualFields)
-  ################################################################################
-  # load patches to visualFields, as new normative values, locations map, etc here
-  ################################################################################
-  load("nvsapmw.rda")
-  load( "vfsettingsmw.rda" )
-  source( "vflayoutmw_singleField.r" )
 
-  #CARE!!! set appropriate normative values
-  setnv( "nvsapmw" )
+  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral"))) {  
+    ###################################################################################################
+    # Create printout of data using visualFields package
+    ###################################################################################################
+    library(visualFields)
+    ################################################################################
+    # load patches to visualFields, as new normative values, locations map, etc here
+    ################################################################################
+    load("nvsapmwcps.rda")
+    load( "vfsettingsmw.rda" )
+    source( "vflayoutmw_singleField.r" )
 
-  #load data
-  filename <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")
-  loadfile <- read.csv(filename)
-  vf <- loadvfcsv( filename = filename, patternMap = eval(parse(text = paste0("saplocmap$",as.character((tail(loadfile$tpattern,1)))))))
+    #CARE!!! set appropriate normative values
+    setnv( "nvsapmwcps" )
 
-  #generate unique file name for printout
-  fname <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_visualFields.pdf")
-  #save printout
-  vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
+    #load data
+    filename <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")
+    loadfile <- read.csv(filename)
+    vf <- loadvfcsv( filename = filename, patternMap = eval(parse(text = paste0("saplocmap$",as.character((tail(loadfile$tpattern,1)))))))
+
+    #generate unique file name for printout
+    fname <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_visualFields.pdf")
+    #save printout
+    vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
+  }
 }
 
 opiClose()
-#source('ZEST_big_grid_simulation.r')  # simulation test (only works for RE peripheral)
+#source('ZEST_big_grid_simulation.r')  # simulation test
+#source("censored_PDF_simulation.r")

@@ -92,7 +92,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
     #   rw   - row of location
     #   cl   - column of location
     #
-    # RETURNS: matrix of locations where column 1 = x coordinate, column 2 = y 
+    # RETURNS: matrix of locations where column 1 = row index, column 2 = column index 
     ########################################################################
     openUP <- function(gp, gn, rw, cl, states) {
       wave <- gp[rw,cl]
@@ -224,8 +224,11 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         }
         myEnv$locsPresented <- locsPresented[-nrow(locsPresented),]
         gUndos <<- gUndos - 1
-        cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
+        
+        if (details$gridType != "practice") {
+          cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
             append=TRUE,paste("Presentation at location x =",states[[rr,cc]]$x,"y =",states[[rr,cc]]$y,"was deleted\n",sep=" "))
+        }
       }
 
     }
@@ -351,7 +354,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
           states[[rw,cl]] <- stepFun(states[[rw,cl]])
         }
         
-        if (details$gridType != "Peripheral") {interStimInt(respTime,minInterStimInt)}
+        if (all(details$gridType != c("Peripheral","P-Peripheral","P-Edge"))) {interStimInt(respTime,minInterStimInt)}
         currentThresholds[rw,cl] <- sum(states[[rw,cl]]$pdf*states[[rw,cl]]$domain) # update currentThresholds
         currentNumPres[rw,cl] <- states[[rw,cl]]$numPresentations        
         
@@ -365,7 +368,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         if (length(locs) == 1) {
           dummy_start_time <- Sys.time()
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
-          if (details$gridType != "Peripheral") {interStimInt(respTime,minInterStimInt)}
+          if (all(details$gridType != c("Peripheral","P-Peripheral","P-Edge"))) {interStimInt(respTime,minInterStimInt)}
           
           if (details$gridType != "practice") {
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime, testGrid = gridPat)
@@ -398,6 +401,10 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
             }
         }
         index[[1]] <- index[[2]]  #move next stimulus to current stimulus before next presentation sequence
+    }
+    if (gRunning) {
+      currentThresholds[currentThresholds < states[[rw,cl]]$domain[6]] <- -1 #Set censored thresholds to -1
+      finishedThresholds[finishedThresholds < states[[rw,cl]]$domain[6]] <- -1 #Set censored thresholds to -1
     }
     testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,plotStimResponse=FALSE,testGrid = gridPat)
     return(list(t=currentThresholds, n=currentNumPres,fpc=fp_counter,fnc=fn_counter,rt=respTime))

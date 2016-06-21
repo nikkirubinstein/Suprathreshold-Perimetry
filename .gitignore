@@ -14,4 +14,4 @@ vignettes/*.pdf
 
 # .csv files
 *.csv
-CTL/
+CTR/

@@ -43,14 +43,27 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   ######################################################
   # first plot all graphs
   ######################################################
-  xmin     <- -87
-  xmax     <-  51
-  ymin     <- -51
-  ymax     <-  33
+  if (vf$tpattern == "peripheralv" || vf$tpattern == "peripheralvi") {
+    if (vf$seye == "OS") {
+      xmin     <- -90
+      xmax     <-  54
+    } else {
+      xmin <- -54
+      xmax <- 90
+    }
+    ymin     <- -54
+    ymax     <-  36
+  } else {
+    xmin <- -30
+    xmax <- 30
+    ymin <- -30
+    ymax <- 30
+  }
+
   # total-deviation plot
   opar <- par( no.readonly = TRUE )
   1.642857
-  par( fig = c( 0.225, 0.975, 0.675, 0.975 ) )
+  par( fig = c( 0.275, 1.00, 0.675, 0.975 ) )
   vfplotmw( vf, plotType = "td", txtfont = ffamilyvf, pointsize = pointsize,
           xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
           outerSymbol = outerSymbol, innerSymbol = innerSymbol,
@@ -59,7 +72,7 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
       lengthLines = lengthLines, thicknessLines = thicknessLines )
   # raw sensitivities
   opar <- par( new = TRUE )
-  par( fig = c( 0.225, 0.975, 0.35, 0.65 ) )
+  par( fig = c( 0.275, 1.00, 0.35, 0.65 ) )
   vfplotmw( vf, plotType = "vf", txtfont = ffamilyvf, pointsize = pointsize,
           xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
           outerSymbol = outerSymbol, innerSymbol = innerSymbol,
@@ -67,7 +80,7 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
           lengthLines = lengthLines, thicknessLines = thicknessLines )
   # pattern-deviation plot
   opar <- par( new = TRUE )
-  par( fig = c( 0.225, 0.975, 0.025, 0.325 ) )
+  par( fig = c( 0.275, 1.00, 0.025, 0.325 ) )
   vfplotmw( vf, plotType = "pd", txtfont = ffamilyvf, pointsize = pointsize,
           xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
           outerSymbol = outerSymbol, innerSymbol = innerSymbol,
@@ -102,12 +115,13 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   global       <- createviewport( "global",      left =  0.20, top =  1.65, width = 0.70, height = 1.10, pheight = mheight, pwidth = mwidth )
   pval         <- createviewport( "pval",        left =  1.00, top =  1.65, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
   labeladd     <- createviewport( "labeladd",    left =  0.05, top =  2.50, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
-  addinfo      <- createviewport( "addinfo",     left =  1.25, top =  2.50, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
-  comments     <- createviewport( "comments",    left =  0.05, top =  3.30, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
+  addinfo      <- createviewport( "addinfo",     left =  1.50, top =  2.50, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
+  labelcomments <- createviewport( "labelcomments", left =  0.05, top =  3.40, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth ) 
+  comments     <- createviewport( "comments",    left =  0.05, top =  3.55, width = 1.00, height = 1.10, pheight = mheight, pwidth = mwidth )
 
   # create the list and then generate the tree and "push" it
   list <- vpList( mainInfo, tdtext, senstext, pdtext, normvaltxt,
-                  typetxt, infotxt, labelreliab, reliability, label, global, pval, labeladd, addinfo, comments )
+                  typetxt, infotxt, labelreliab, reliability, label, global, pval, labeladd, addinfo, labelcomments, comments )
   tree <- vpTree( printout, list )
   
   pushViewport( tree )
@@ -282,10 +296,10 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )
 
   seekViewport( "labeladd" )
-  text <- "Foveal thr:"
-  text <- paste( text, "Num presentations:", sep = "\n" )
-  text <- paste( text, "Outliers:", sep = "\n" )
-  text <- paste( text, "Num mistakes:", sep = "\n" )
+  text <- "Foveal Threshold:"
+  text <- paste( text, "Total Num Presentations:", sep = "\n" )
+  text <- paste( text, "Outlier Presentations:", sep = "\n" )
+  text <- paste( text, "Num Mistakes:", sep = "\n" )
   text <- paste( text, "Deleted:", sep = "\n" )
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )
 
@@ -296,7 +310,11 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   text <- paste( text, vf$mistakes, sep = "\n" )
   text <- paste( text, vf$deleted, sep = "\n" )
   grid.text( text, x = 0.00, y = 1.00, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )
-
+  
+  seekViewport ("labelcomments")
+  text <- "Comments:"
+  grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )
+  
   seekViewport( "comments" )
   text <- as.character( vf$comments )
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )

@@ -7,7 +7,8 @@ chooseOpi("SimHenson")
 #chooseOpi("SimYes")
 #chooseOpi("SimNo")
 #opiInitialize(sd=1)
-opiInitialize(type="C", cap=6, display=NULL)
+opiInitialize(type="C", cap=6, display=NULL,maxStim = 4000/pi)
+#opiInitialize(sd=1)
 source("query_patient_details.r")
 gRunning <- TRUE
 
@@ -15,16 +16,35 @@ Peripheral_TT <- testPattern(grid.peripheral.coords)
 Peripheral_TT[14815] <- 30
 
 TT.30.1 <- testPattern(grid.30.1.coords)
-TT.30.1[which(TT.30.1 == 2)] <- 30
+TT.30.1[which(TT.30.1 == 2)] <- 40
 
 TT.30.2 <- testPattern(grid.30.2.coords)
-TT.30.2[which(TT.30.2 == 2)] <- 30
+TT.30.2[!is.na(TT.30.2)] <- 2
+#TT.30.2[which(TT.30.2 == 1)] <- 35
+#TT.30.2[which(TT.30.2 == 2)] <- 33
+#TT.30.2[which(TT.30.2 == 3)] <- 31
+#TT.30.2[which(TT.30.2 == 4)] <- 29
 
 TT.24.2 <- testPattern(grid.24.2.coords)
 TT.24.2[which(TT.24.2 == 1)] <- 30
 
 TT.G1 <- testPattern(grid.G1.coords)
 TT.G1[which(TT.G1 == 1)] <- 30
+
+TT.PTotal <- testPattern(grid.PTotal.coords)
+TT.PTotal[which(TT.PTotal == 1)] <- 30
+
+TT.PCentral10 <- testPattern(grid.PCentral10.coords)
+TT.PCentral10[which(TT.PCentral10 == 2)] <- 30
+
+TT.PCentral26 <- testPattern(grid.PCentral26.coords)
+TT.PCentral26[which(TT.PCentral26 == 2)] <- 30
+
+TT.PEdge <- testPattern(grid.PEdge.coords)
+TT.PEdge[which(TT.PEdge == 2)] <- 30
+
+TT.PPeri <- testPattern(grid.PPeri.coords)
+TT.PPeri[which(TT.PPeri == 2)] <- 30
 
 tt.practice <- testPattern(grid.practice.coords)
 
@@ -36,7 +56,7 @@ tt.practice <- testPattern(grid.practice.coords)
 details <- practiceQuery()
 
 while (details$practice == TRUE) {
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=2,tt=tt.practice)
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=8,outlierFreq=2,tt=tt.practice)
   tkdestroy(tt)
   pracTestComplete()
   dev.off()
@@ -63,13 +83,23 @@ if (details$gridType == "Peripheral") {
   TT <- TT.24.2
 } else if (details$gridType == "practice") {
   TT <- tt.practice
+} else if (details$gridType == "P-Total") {
+  TT <- TT.PTotal
+} else if (details$gridType == "P-Central10") {
+  TT <- TT.PCentral10
+} else if (details$gridType == "P-Central26") {
+  TT <- TT.PCentral26
+} else if (details$gridType == "P-Edge") {
+  TT <- TT.PEdge
+} else if (details$gridType == "P-Peripheral") {
+  TT <- TT.PPeri
 }
 
 if (details$eye == "left") {
   TT <- grid.flip(TT)
 }
 
-  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,outlierValue=5,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
+  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,outlierValue=8,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()
@@ -100,12 +130,12 @@ if (gRunning) {
   ################################################################################
   # load patches to visualFields, as new normative values, locations map, etc here
   ################################################################################
-  load("nvsapmw.rda")
+  load("nvsapmwcps.rda")
   load( "vfsettingsmw.rda" )
   source( "vflayoutmw_singleField.r" )
   
   #CARE!!! set appropriate normative values
-  setnv( "nvsapmw" )
+  setnv( "nvsapmwcps" )
   
   #load data
   filename <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")

@@ -47,7 +47,7 @@ inputs <- function(){
   VA <- c("20/10","20/12.5","20/16","20/20","20/25","20/32","20/40","20/50","20/63","20/80","20/100","20/125",
              "20/160","20/200","20/250","20/320","20/400","20/500","20/630","20/800","CF","LP")
   comboBox <- tkwidget(tt,"ComboBox",editable=FALSE,values=VA,textvariable=comboVal1)
-  gridType <- c("Peripheral","30-2","30-1","24-2","G1")
+  gridType <- c("Peripheral","30-2","30-1","24-2","G1","P-Total","P-Central10","P-Central26","P-Peripheral","P-Edge")
   comboBox2 <- tkwidget(tt,"ComboBox",editable=FALSE,values=gridType,textvariable=comboVal2) 
   
   rb4 <- tkradiobutton(tt)
