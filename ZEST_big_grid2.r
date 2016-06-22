@@ -700,6 +700,7 @@ source("query_patient_details.r")
 
     # extra opiInitialize to light up bowl before procedure starts
 opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye="right",gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
+opiClose()
 
 gRunning <- TRUE
 
@@ -707,10 +708,7 @@ details <- practiceQuery()
 
 while (details$practice == TRUE) {
   gRunning <- TRUE
-  if (details$eye != "right") {
-     opiClose()  
-     opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
-  }
+  opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
   Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
   tkdestroy(tt)
   pracTestComplete()
