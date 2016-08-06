@@ -78,8 +78,8 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         FNPause=300,
         FNLocationThreshold=20,
         FPSize, FNSize,
-        initialRespWin=1000,
-        respWinBuffer=200,
+        initialRespWin=1200,
+        respWinBuffer=250,
         moveProj,
         minInterStimInt) {
 
@@ -173,7 +173,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
     # Note does not allow responseWindow to be less than respWinBuffer
     # Returns the state after alteration
     ####################################################################
-    setResponseWindow <- function(state, responseWindow) {
+    setResponseWindow <- function(state,respWinBuffer,responseWindow) {
             
         m <- state$makeStim 
         body(m)[[2]][[3]][[8]] <- respWinBuffer + responseWindow
@@ -290,7 +290,8 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         if ((counter <= 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 != 0)) ||
             (counter > 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 != 0))) {
 
-            result <- presentCatch("POS", mean(respWin) + respWinBuffer, currentThresholds, states,index)
+            result <- presentCatch("POS", mean(respWin) + respWinBuffer, currentThresholds, states,index) #adaptive response window
+            #result <- presentCatch("POS", initialRespWin, currentThresholds, states,index) # fixed response window
             
             if (result$seen) {
               for (i in 1:2) {
@@ -303,24 +304,28 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime,testGrid = gridPat)
             if (details$gridType != "practice") {
             cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time, round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
+                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", "FPCatch",cdTodb(FPLevel,4000/pi), result$seen, result$time, difftime(Sys.time(),start_time,units = "secs") * 1000))
             }
             counter <- counter + 1
+            start_time <- Sys.time()  #reset start_time counter for trial time
         }
         
         if ((counter <= 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE)) ||
             (counter > 60 && length(fn_counter) < catchTrialMax && ((counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 == 0)) && any(currentThresholds > FNLocationThreshold,na.rm=TRUE))){
           
           result <- presentCatch("NEG", mean(respWin) + respWinBuffer, currentThresholds, states,index)
+          #result <- presentCatch("NEG", initialRespWin, currentThresholds, states,index) #fixed response window
+          
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=states[[rw,cl]],respTime, testGrid = gridPat)
             if (details$gridType != "practice") {
               cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f\n Trial Time: %.0f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time,round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
+                append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f\n Trial Time: %.0f\n", "FNCatch",cdTodb(result$stimulus,4000/pi), result$seen, result$time,difftime(Sys.time(),start_time,units = "secs") * 1000))
             }
             
           counter <- counter + 1
+          start_time <- Sys.time() #reset start_time counter for trial time
         } 
 
         counter <- counter + 1
@@ -346,7 +351,7 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
 
         locsPresented <- rbind(locsPresented,c(rw,cl))
         
-        states[[rw,cl]] <- setResponseWindow(states[[rw,cl]], mean(respWin))
+        states[[rw,cl]] <- setResponseWindow(states[[rw,cl]],respWinBuffer,mean(respWin))  #Updates response window
         
         if (length(locs) > 1 && moveProj == TRUE) {
           states[[rw,cl]] <- stepFun(states[[rw,cl]],nextStimState=states[[rw2,cl2]])
@@ -362,18 +367,20 @@ procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun
         if (details$gridType != "practice") {
           cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
           append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", states[[rw,cl]]$x, states[[rw,cl]]$y, 
-            tail(states[[rw,cl]]$stimuli,1), tail(states[[rw,cl]]$responses,1), tail(states[[rw,cl]]$responseTimes,1),round(difftime(Sys.time(),start_time,units = "secs")) * 1000))
+            tail(states[[rw,cl]]$stimuli,1), tail(states[[rw,cl]]$responses,1), tail(states[[rw,cl]]$responseTimes,1),difftime(Sys.time(),start_time,units = "secs") * 1000))
         }
         
         if (length(locs) == 1) {
           dummy_start_time <- Sys.time()
           result <- presentDummy (gridPat,mean(respWin) + respWinBuffer,startFun,states)
+          #result <- presentDummy (gridPat,initialRespWin,startFun,states) #fixed response window
+          
           if (all(details$gridType != c("Peripheral","P-Peripheral","P-Edge"))) {interStimInt(respTime,minInterStimInt)}
           
           if (details$gridType != "practice") {
             testStatus(result$seen,currentNumPres,currentThresholds,finishedThresholds,finished_counter,gp,fp_counter,fn_counter,stateInfo=list(x=result$x,y=result$y),respTime, testGrid = gridPat)
             cat(file=paste(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt",sep=""),
-              append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,round(difftime(Sys.time(),dummy_start_time,units = "secs")) * 1000,"(Dummy Trial)"))
+              append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$x,result$y,result$stimulus, result$seen, result$time,difftime(Sys.time(),dummy_start_time,units = "secs") * 1000,"(Dummy Trial)"))
           }
         }
         

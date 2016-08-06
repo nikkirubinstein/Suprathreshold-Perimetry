@@ -48,6 +48,7 @@
 #         25 Jan 2016: Created adaptive interStimInterval based on observer's response times.
 #         25 Apr 2016: Integrated procedure with the visualFields package
 #         28 Apr 2016: Threshold Censoring and addition of new polar grids
+#         22 July 2016: Added function to combine central and peripheral polar grids.
 
 rm(list=ls())
 source("grids2.r")
@@ -259,7 +260,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
           
         ms <- makeStimHelper(-6-14*6 + (cl-1), 6+8*6 - (rw-1))
         state <- ZEST.start(domain=domain, prior=prior, makeStim=ms, 
-                              minStimulus=0,
+                              minStimulus=max(0,minDomain),
                               maxStimulus=40,
                               tt=ifelse(!is.null(dim(tt)), tt[rw,cl], NA),
                               fpr=ifelse(!is.null(dim(tt)), fpv, NA),
@@ -373,7 +374,16 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     ###########################################################
     # Re-test outliers
     ###########################################################
-    outliers <- NeighbourDifference(tz,outlierValue,outlierFreq)
+    if (any(gridType == c("P-Total","P-Peripheral"))) {
+      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 14)
+    } else if (gridType == "P-Central10") {
+      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 5)
+    } else if (gridType == "P-Edge") {
+      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 16)
+    } else {
+      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 10)
+    }
+    
     if (sum(outliers,na.rm=TRUE) > 0) {
       outlierPriors <- apply(outliers, 1:2, function(x) ifelse(is.na(x), NA, ifelse(x == 1, primaryStartValue, NA)))
       windows(width=700,height=250,ypos=300)
@@ -403,6 +413,30 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
       res <- list(np=res1$n, ae=abs(tz-tt), th=res1$t,thOutliers=res2$t,npOutliers=res2$n,trues=tt,fp_counter=res1$fpc,fn_counter=res1$fnc,fp_outliers=res2$fpc,fn_outliers=res2$fnc,rt=res1$rt,rtOutliers=res2$rt)
     }
     return(res)
+}
+
+###########################################################################################
+# Function which combines two separate test results into one
+###########################################################################################
+combine <- function(test1,test2) {
+  index <- which(!is.na(test1[["np"]]))
+  z <- vector("list",length(test1)) #create empty list
+  names(z) <- names(test1) # assign list names
+  
+  for (om in c("np","ae","th","thOutliers","npOutliers","trues")) {
+    test2[[om]][index] <- test1[[om]][index]  #add central grid to peripheral
+    z[[om]] <- test2[[om]]
+  }
+  
+  for (om2 in c("fp_counter","fn_counter","fp_outliers","fn_outliers","rt","rtOutliers")) {
+    z[[om2]] <- c(test1[[om2]],test2[[om2]])
+  }
+  
+  if (!is.null(z1$thFovea) || !is.null(z2$thFovea)) {
+    z[["thFovea"]] <- c(z1$thFovea,z2$thFovea)
+  }
+  
+  return(z)
 }
 
 ###########################################################################################
@@ -723,7 +757,16 @@ if (dir.exists(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman)
 opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE, resp_buzzer = 3)
 PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
-z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=8,outlierFreq=2,minInterStimInterval=0,moveProjector = TRUE)
+if (details$gridType == "P-Total") {
+  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+  tkdestroy(tt)
+  graphics.off()
+  details$fovea <- FALSE
+  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+  z <- combine(z1,z2)
+} else {
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+}
 
 terminate <- Sys.time()
 tkdestroy(tt)  # closes the pause button upon completion of the test

@@ -97,9 +97,20 @@ if (details$gridType == "Peripheral") {
 
 if (details$eye == "left") {
   TT <- grid.flip(TT)
+  TT.PPeri <- grid.flip(TT.PPeri)
+  TT.PCentral10 <- grid.flip(TT.PCentral10)
 }
 
-  z<-Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierFreq=2,outlierValue=8,minInterStimInterval=0, tt=TT,moveProjector = FALSE)
+if (details$gridType == "P-Total") {
+  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT.PCentral26,moveProjector = TRUE)
+  tkdestroy(tt)
+  graphics.off()
+  details$fovea = FALSE
+  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT.PPeri,moveProjector = TRUE)
+  z <- combine(z1,z2)
+} else {
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT,moveProjector = TRUE)
+}
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
 terminate <- Sys.time()
@@ -123,6 +134,7 @@ if (gRunning) {
   writeFile3(details)
   px_database(details)
   
+  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral"))) {  
   ###################################################################################################
   # Create printout of data using visualFields package
   ###################################################################################################
@@ -146,6 +158,7 @@ if (gRunning) {
   fname <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_visualFields.pdf")
   #save printout
   vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
+  }
 }
 
 
