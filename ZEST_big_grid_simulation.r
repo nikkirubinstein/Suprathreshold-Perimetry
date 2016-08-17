@@ -19,7 +19,7 @@ TT.30.1 <- testPattern(grid.30.1.coords)
 TT.30.1[which(TT.30.1 == 2)] <- 40
 
 TT.30.2 <- testPattern(grid.30.2.coords)
-TT.30.2[!is.na(TT.30.2)] <- 2
+TT.30.2[!is.na(TT.30.2)] <- 30
 #TT.30.2[which(TT.30.2 == 1)] <- 35
 #TT.30.2[which(TT.30.2 == 2)] <- 33
 #TT.30.2[which(TT.30.2 == 3)] <- 31
@@ -56,7 +56,7 @@ tt.practice <- testPattern(grid.practice.coords)
 details <- practiceQuery()
 
 while (details$practice == TRUE) {
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=8,outlierFreq=2,tt=tt.practice)
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=8,outlierFreq=2,tt=tt.practice,retest=details$retest)
   tkdestroy(tt)
   pracTestComplete()
   dev.off()
@@ -102,14 +102,14 @@ if (details$eye == "left") {
 }
 
 if (details$gridType == "P-Total") {
-  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT.PCentral26,moveProjector = TRUE)
+  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,minInterStimInterval=0,tt=TT.PCentral26,moveProjector = TRUE,retest=details$retest)
   tkdestroy(tt)
   graphics.off()
   details$fovea = FALSE
-  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT.PPeri,moveProjector = TRUE)
+  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,minInterStimInterval=0,tt=TT.PPeri,moveProjector = TRUE,retest=details$retest)
   z <- combine(z1,z2)
 } else {
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,outlierFreq=3,minInterStimInterval=0,tt=TT,moveProjector = TRUE)
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,minInterStimInterval=0,tt=TT,moveProjector = TRUE,retest=details$retest)
 }
   np <- c(np,sum(unlist(z$np),na.rm=TRUE)) # avg np 282 for tt=30
 #}
@@ -120,13 +120,13 @@ graphics.off()
 if (gRunning) {
   windows(900,350)
   testStatusFinal(z)
-  pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
-  testStatusFinal(z)
-  dev.off()
   testComplete()
 }
 
 if (gRunning) {
+  pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
+  testStatusFinal(z)
+  dev.off()
   comments <- finalComments()
   details$comments <- paste(details$comments,comments,sep=".")
   writeFile()
@@ -159,6 +159,8 @@ if (gRunning) {
   #save printout
   vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
   }
+} else {
+  file.remove(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt"))
 }
 
 

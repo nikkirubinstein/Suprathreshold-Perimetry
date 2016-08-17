@@ -55,16 +55,18 @@ inputs <- function(){
   rb6 <- tkradiobutton(tt)
   rb7 <- tkradiobutton(tt)
   rb8 <- tkradiobutton(tt)
-  cb <- tkcheckbutton(tt)  
-  cbValue <- tclVar("0")
+  cb1 <- tkcheckbutton(tt)
+  cb2 <- tkcheckbutton(tt)
+  cb1Value <- tclVar("0")
+  cb2Value <- tclVar("0")
   
   tkconfigure(rb4,variable=rbValue2,value=0.43)
   tkconfigure(rb5,variable=rbValue2,value=1.72)
   tkconfigure(rb6,variable=rbValue2,value=3.44)
   tkconfigure(rb7,variable=rbValue3,value="right")
   tkconfigure(rb8,variable=rbValue3,value="left")
-  tkconfigure(cb,variable=cbValue)
-  
+  tkconfigure(cb1,variable=cb1Value)
+  tkconfigure(cb2,variable=cb2Value)
   
   tkwm.title(tt,"Patient Details")
   entry1 <- tkentry(tt, textvariable=var1,width="40")
@@ -125,10 +127,11 @@ inputs <- function(){
       e <- gridType[as.numeric(tclvalue(tcl(comboBox2,"getvalue")))+1]
       f1 <- tclvalue(rbValue2)
       g <- tclvalue(rbValue3)
-      h <- as.logical(as.numeric(tclvalue(cbValue)))
+      h <- as.logical(as.numeric(tclvalue(cb1Value)))
       i <- tclvalue(var5)
       j <- tclvalue(var6)
       k <- VA[as.numeric(tclvalue(tcl(comboBox,"getvalue")))+1]
+      l <- as.logical(as.numeric(tclvalue(cb2Value)))
       
       if (f1 == 0.43) {
         f2 <- "III"
@@ -151,6 +154,7 @@ inputs <- function(){
       env$iii <- i
       env$jjj <- j
       env$kkk <- k
+      env$lll <- l
       
       tkdestroy(tt)
     }
@@ -177,22 +181,23 @@ inputs <- function(){
 
   tkgrid(tklabel(tt,text="Grid Type  "),comboBox2,pady=10,padx=10)
   tkgrid.configure(comboBox2,columnspan=7,sticky="new")
-  tkgrid(tklabel(tt,text="     Stimulus\n    Size"),tklabel(tt,text="III"),rb4,tklabel(tt,text="V"),rb5,tklabel(tt,text="VI"),rb6,pady=10,padx=10,sticky="w")
+  tkgrid(tklabel(tt,text="     Stimulus\n     Size"),tklabel(tt,text="III"),rb4,tklabel(tt,text="V"),rb5,tklabel(tt,text="VI"),rb6,pady=10,padx=10,sticky="w")
   eyeLab <- tklabel(tt,text="Eye  ")
   tkgrid(eyeLab,tklabel(tt,text="Right"),rb7,tklabel(tt,text="Left"),rb8,
          pady=10,padx=10,sticky="w")
   tkgrid.configure(eyeLab,sticky="s")
-  tkgrid.configure(rb4,rb7,column=2)
+  tkgrid.configure(rb4,rb7,column=2,sticky="w")
   tkgrid.configure(rb5,rb8,column=3,sticky="e")
-  tkgrid(tklabel(tt,text="  Test Foveal Threshold?"),cb,pady=10,padx=10,sticky="new",columnspan=2)
-  tkgrid.configure(cb,sticky="w")
+  tkgrid(tklabel(tt,text=""),tklabel(tt,text="Foveal Test?"),cb1,tklabel(tt,text="Full From Prior?"),cb2,pady=10,padx=10,sticky="w")
+  tkgrid.configure(cb1,sticky="w")
+  tkgrid.configure(cb2,sticky="e",column=3)
   tkgrid(submit.but,loadpx.but,padx=10,pady=10,sticky="s")
-  tkgrid.configure(submit.but,column=2)
-  tkgrid.configure(loadpx.but,column=3,columnspan=2)
+  tkgrid.configure(submit.but,column=1)
+  tkgrid.configure(loadpx.but,column=3)
   tkbind(tt,'<Return>', submit)
   tkwait.window(tt)
   
-  return(list(name=aaa,age=bbb,dx=ccc,MRx=iii,OR=jjj,VA=kkk,comments=ddd,gridType=eee,stimSizeRoman=f2,eye=ggg,fovea=hhh,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f1))
+  return(list(name=aaa,age=bbb,dx=ccc,MRx=iii,OR=jjj,VA=kkk,comments=ddd,gridType=eee,stimSizeRoman=f2,eye=ggg,fovea=hhh,retest=lll,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f1))
 }
 
 ###################################################################################################################

@@ -20,7 +20,7 @@ testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedTh
   dispFinished <- finishedThresholds[apply(testGrid,1,function (x) !all(is.na(x))),apply(testGrid,2,function (x) !all(is.na(x)))]
   combos <- expand.grid(1:ncol(dispCurrent),nrow(dispCurrent):1)
   
-  par(mar=c(0, 4, 0, 1) + 0.1)
+  par(mar=c(0, 4, 0, 0) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
   plot(1,type="n",xlim=c(1,10),ylim=c(1,100),xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
   text(1,95,paste("ID:",details$name,sep=" "),pos=4,cex=2,font=2)
@@ -67,7 +67,8 @@ testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedTh
   grid(nx=ncol(dispCurrent),ny=nrow(dispCurrent),col="white",lty="solid")
   axis(1,at=1:ncol(dispCurrent),as.numeric(colnames(dispCurrent)))
   axis(2,at=nrow(dispCurrent):1,as.numeric(rownames(dispCurrent)))
-
+  box(col = "black")
+  
   text(combos[,1],combos[,2],round(as.vector(t(dispCurrent))),col="red",font=2,cex=2)
   text(combos[,1],combos[,2],round(as.vector(t(dispFinished))),col="blue",font=2,cex=2)
   
@@ -87,11 +88,15 @@ testStatus <- function (stimResponse,currentNumPres,currentThresholds,finishedTh
 #
 #####################################################################################################################
 testStatusFinal <- function (summary) {
-
-  disp <- round(summary$th[apply(summary$th,1,function (x) !all(is.na(x))),apply(summary$th,2,function (x) !all(is.na(x)))])
+  finalTh <- summary$th
+  
+  if (!is.null(summary$thOutliers)) {
+    finalTh[!is.na(summary$thOutliers)] <- summary$thOutliers[!is.na(summary$thOutliers)]
+  }  
+  
+  disp <- round(finalTh[apply(finalTh,1,function (x) !all(is.na(x))),apply(finalTh,2,function (x) !all(is.na(x)))])
   combos <- expand.grid(1:ncol(disp),nrow(disp):1)
-
-  par(mar=c(0, 4, 0, 1) + 0.1)
+  par(mar=c(0, 4, 0, 0) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
   plot(1,type="n",xlim=c(1,10),ylim=c(1,100),xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
   text(1,100,paste("ID:",details$name,sep=" "),pos=4,cex=2,font=2)
@@ -137,14 +142,15 @@ testStatusFinal <- function (summary) {
   image.plot(1:ncol(disp),1:nrow(disp),f(disp),xaxt="n",yaxt="n",col=gray(1:10/10),xlab="",ylab="",zlim=c(-4,35))
   layout(matrix(c(1,rep(2,2)),1,3))
   grid(nx=ncol(disp),ny=nrow(disp),col="white",lty="solid")
-  
-  thresholds <- round(summary$th)
-  if (!is.null(summary$thOutliers)) {
-    outliersIndex <- which(!is.na(summary$thOutliers),arr.ind=TRUE)
-    outliers <- apply(outliersIndex,1, function (x) {paste(thresholds[x[1],x[2]],"(",round(summary$thOutliers[x[1],x[2]]),")",sep="")})
-    thresholds[outliersIndex] <- outliers
-  }
+  box(col = "black")
   text(combos[,1], combos[,2],as.vector(t(disp)),col="blue",font=2,cex=2)
+  
+  #thresholds <- round(summary$th)
+  #if (!is.null(summary$thOutliers)) {
+  #  outliersIndex <- which(!is.na(summary$thOutliers),arr.ind=TRUE)
+  #  outliers <- apply(outliersIndex,1, function (x) {paste(thresholds[x[1],x[2]],"(",round(summary$thOutliers[x[1],x[2]]),")",sep="")})
+  #  thresholds[outliersIndex] <- outliers
+  #}
 }
 
 

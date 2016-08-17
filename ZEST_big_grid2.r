@@ -49,6 +49,8 @@
 #         25 Apr 2016: Integrated procedure with the visualFields package
 #         28 Apr 2016: Threshold Censoring and addition of new polar grids
 #         22 July 2016: Added function to combine central and peripheral polar grids.
+#         11 August 2016: Added Full From Prior option. Seeds unimodal prior based on previous test result.
+#         13 August 2016: Changed outliers calculation rule
 
 rm(list=ls())
 source("grids2.r")
@@ -81,7 +83,7 @@ source("testStatusOutput.r")
 #########################################################################
 Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
                     minInterStimInterval=300,
-                    tt=NA, fpv=0.00, fnv=0.00,outlierFreq=1,outlierValue=5,moveProjector = TRUE) {
+                    tt=NA, fpv=0.00, fnv=0.00,outlierFreq=1,outlierValue=5,moveProjector = TRUE, retest=FALSE) {
     ####################################################################
     # Each location derives its start value from the average of all of the
     # immediate 9 neighbours that are lower than it.
@@ -199,7 +201,44 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     z <- !is.na(growthPattern)
     fp <- z * matrix(fpv, nrow(growthPattern), ncol(growthPattern))
     fn <- z * matrix(fnv, nrow(growthPattern), ncol(growthPattern))
-
+    
+    
+    ###############################################################
+    # Seed prior from previous tests if retest == TRUE
+    # prevTh - matrix of thresholds from previous test
+    #
+    ###############################################################
+    if (retest == TRUE) {
+      retestFile <- paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$dx,"_",details$gridType,
+                         "_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")
+    
+      if (file.exists(retestFile)) {
+        readRetest <- read.csv(retestFile)
+      
+        #Extract rows for previous test of patient for a given eye.
+        #Check if previous test exists
+        getPx <- intersect(grep(details$name,readRetest[,"id"]),grep(ifelse(details$eye == "left","OS","OD"),readRetest[,"seye"]))
+        if (length(getPx) == 0) {
+          stop("Unable to seed from prior. Previous test does not exist")
+        }
+      
+        readRetest <- readRetest[getPx,]
+        readRetest <- readRetest[nrow(readRetest),] #Extract most recent test
+      
+        prevTh <- matrix(NA,nrow = nrow(growthPattern),ncol = ncol(growthPattern),byrow=TRUE)
+        retestIndex <- which(!is.na(growthPattern),arr.ind=TRUE) #find indices of test locations
+        retestIndex <- retestIndex[order(retestIndex[,1]),] #order by row
+        threshold <- readRetest[grep("L",names(readRetest))]
+        if (details$gridType == "30-2") {threshold <- threshold[-which(threshold == 0)]} #remove blind spot locations for 30-2
+      
+        for (i in 1:length(threshold)) {
+          prevTh[retestIndex[i,1],retestIndex[i,2]] <- as.numeric(threshold[i])
+        }
+      } else {
+        stop("Unable to seed from prior. Previous test does not exist")
+      }
+    }
+    
     #####################################################
     # Given guess, create a state for location (rw, cl)
     # where (rw,cl) is index into grid.* matrix
@@ -209,7 +248,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     #  2) a domain of -5:45 dB
     #####################################################
     startF <- function(guess, rw, cl) {
-        
+
         # censor thresholds
         if (any(details$gridType == c("P-Total","P-Central10","P-Central26","P-Peripheral","P-Edge"))) {
           minDomain <- 10
@@ -236,7 +275,14 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
           cpdf[which(cpdf < pdf.floor)] = pdf.floor 
           return (cpdf)
         }	
-        prior <- makeBiModalPDF(round(guess),4,0.001)
+        
+        if (retest == TRUE) {
+          glaucomaPDF <- rep(0.001,length(domain)) 
+          prior <- makeBiModalPDF(max(prevTh[rw,cl], minDomain + 5),4,0.001)  #if prevTh is below censored th, set peak at censored th. 
+        } else {
+          prior <- makeBiModalPDF(round(guess),4,0.001)
+        }
+        
         #prior <- uniformPDF
         #prior <- gaussPDF
         #prior[which(prior < 0.001)] <- 0.001
@@ -341,7 +387,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     # Calculate Difference between neighbours within each of the 4 quadrants
     # and identify outliers
     #########################################################################
-    NeighbourDifference <- function(vf,outlierValue,outlierFreq,search_extent = 10) {
+    NeighbourDifference <- function(vf,outlierValue,search_extent = 10) {
       result <- matrix(NA,nrow(vf),ncol(vf))
       for (i in list(1:(0.5*nrow(vf)),(0.5*nrow(vf)+1):nrow(vf))) {
         for (j in list(((0.5*ncol(vf)+1):ncol(vf)),(1:(0.5*ncol(vf))))) {
@@ -359,11 +405,23 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
             if (nrow(neighbours) == 0) {
               deltas <- NULL
             } else {
+              if (nrow(neighbours) == 1) {
+                outlierFreq <- 1
+              } else if (any(nrow(neighbours) == c(2:4))) {
+                outlierFreq <- 2
+              } else if (any(nrow(neighbours) == c(5:6))) {
+                outlierFreq <- 3
+              } else if (nrow(neighbours) == 7) {
+                outlierFreq <- 4
+              } else if (nrow(neighbours) >= 8) {
+                outlierFreq <- 5
+              }
               deltas <- round(apply(neighbours, 1, function (t) {
                 abs(quadrant[locIndex[rr,1],locIndex[rr,2]] - quadrant[t[1],t[2]])
               }))
-            }
-            if (sum(deltas >= outlierValue, na.rm=TRUE) >= outlierFreq) {quadResult[locIndex[rr,1],locIndex[rr,2]] <- 1}  
+              
+              if (sum(deltas >= outlierValue, na.rm=TRUE) >= outlierFreq) {quadResult[locIndex[rr,1],locIndex[rr,2]] <- 1}  
+            } 
           }
           result[i,j] <- quadResult
         }
@@ -375,13 +433,13 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
     # Re-test outliers
     ###########################################################
     if (any(gridType == c("P-Total","P-Peripheral"))) {
-      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 14)
+      outliers <- NeighbourDifference(tz,outlierValue,search_extent = 14)
     } else if (gridType == "P-Central10") {
-      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 5)
+      outliers <- NeighbourDifference(tz,outlierValue,search_extent = 5)
     } else if (gridType == "P-Edge") {
-      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 16)
+      outliers <- NeighbourDifference(tz,outlierValue,search_extent = 16)
     } else {
-      outliers <- NeighbourDifference(tz,outlierValue,outlierFreq,search_extent = 10)
+      outliers <- NeighbourDifference(tz,outlierValue,search_extent = 10)
     }
     
     if (sum(outliers,na.rm=TRUE) > 0) {
@@ -490,7 +548,8 @@ writeFile <- function (filename = paste(details$dx,"/",details$gridType," ",deta
   cat(paste("#Total Presentations: ", sum(c(unlist(z$np),unlist(z$npOutliers)),na.rm=TRUE),sep=""),"\n",file=filename,append=TRUE)
   cat(paste("#FP errors: ",sum(z$fp_counter,na.rm=TRUE),"/",length(z$fp_counter)," (",signif(sum(z$fp_counter,na.rm=TRUE)/length(z$fp_counter)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
   cat(paste("#FN errors: ",sum(z$fn_counter,na.rm=TRUE),"/",length(z$fn_counter)," (",signif(sum(z$fn_counter,na.rm=TRUE)/length(z$fn_counter)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
-
+  cat(paste("#Full From Prior: ",details$retest),"\n",file=filename,append=TRUE)
+  
    if (!is.null(z$thFovea)) {
      cat(paste("#Foveal Threshold: ",round(z$thFovea)," dB", sep=""),"\n",file=filename,append=TRUE)
    } 
@@ -743,7 +802,7 @@ details <- practiceQuery()
 while (details$practice == TRUE) {
   gRunning <- TRUE
   opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1,retest = details$retest)
   tkdestroy(tt)
   pracTestComplete()
   dev.off()
@@ -758,14 +817,14 @@ opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",ey
 PSV <- setPSV(details$gridType,details$stimSizeRoman)
 
 if (details$gridType == "P-Total") {
-  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+  z1 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Central26",outlierValue=7,minInterStimInterval=0,moveProjector = TRUE,retest=details$retest)
   tkdestroy(tt)
   graphics.off()
   details$fovea <- FALSE
-  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+  z2 <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType="P-Peripheral",outlierValue=7,minInterStimInterval=0,moveProjector = TRUE,retest=details$retest)
   z <- combine(z1,z2)
 } else {
-  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,outlierFreq=3,minInterStimInterval=0,moveProjector = TRUE)
+  z <- Zest242(eye=details$eye, primaryStartValue=PSV, gridType=details$gridType,outlierValue=7,minInterStimInterval=0,moveProjector = TRUE,retest=details$retest)
 }
 
 terminate <- Sys.time()
@@ -774,15 +833,15 @@ opiClose()
 graphics.off()
 
 if (gRunning) {
-windows(900,350)
-testStatusFinal(z)
-pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
-testStatusFinal(z)
-dev.off()
-testComplete()
+  windows(900,350)
+  testStatusFinal(z)
+  testComplete()
 }
 
 if (gRunning) {
+  pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)
+  testStatusFinal(z)
+  dev.off()
   comments <- finalComments()
   details$comments <- paste(details$comments,comments,sep=" ")
   writeFile()
@@ -815,6 +874,8 @@ if (gRunning) {
     #save printout
     vflayoutmw_singleField(vf[nrow(vf),], filename = fname)
   }
+} else {
+  file.remove(paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt"))
 }
 
 opiClose()
