@@ -51,6 +51,9 @@
 #         22 July 2016: Added function to combine central and peripheral polar grids.
 #         11 August 2016: Added Full From Prior option. Seeds unimodal prior based on previous test result.
 #         13 August 2016: Changed outliers calculation rule
+#         17 August 2016: Customized prior seeding for polar grids based on normative data collected.
+#         25 August 2016: Added P-Central26 and P-Peripheral visualFields printouts
+
 
 rm(list=ls())
 source("grids2.r")
@@ -276,7 +279,7 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
           return (cpdf)
         }	
         
-        if (retest == TRUE) {
+        if (retest == TRUE && details$fovea == FALSE) {
           glaucomaPDF <- rep(0.001,length(domain)) 
           prior <- makeBiModalPDF(max(prevTh[rw,cl], minDomain + 5),4,0.001)  #if prevTh is below censored th, set peak at censored th. 
         } else {
@@ -503,18 +506,18 @@ combine <- function(test1,test2) {
 # NOTE: Procedure breaks down if PSV > 30. PSV must be 30 dB or lower.
 ###########################################################################################
 setPSV <- function (grid,size) {
-  if ((grid == "30-1") && (size == "V")) {
-    PSV <- 33
-  } else if (grid == "30-2") {
-    if (size == "III") {PSV <- 28} 
-    else if (size == "V") {PSV <- 33} 
-    else {PSV <- 30}
-  } else if (grid == "Peripheral") {
-    if (size == "V") {PSV <- 30} 
-    else if (size == "VI") {PSV <- 32} 
-    else {PSV <- 30} 
-  } else {
-    PSV <- 30
+  if (size == "III") {
+      if (grid == "30-2") {PSV <- 28}
+      else if (grid == "P-Central10") {PSV <- 30}
+      else {PSV <- 30} 
+  } else if (size == "V") {
+      if (any(grid == c("30-2","30-1","P-Central26"))) {PSV <- 33}
+      else if (grid == "Peripheral") {PSV <- 30}
+      else if (grid == "P-Peripheral") {PSV <- 31}
+      else {PSV <- 32}
+  } else if (size == "VI") {
+      if (any(grid == c("Peripheral","P-Edge"))) {PSV <- 32}
+      else {PSV <- 32}
   }
   return(PSV)
 }
@@ -849,7 +852,7 @@ if (gRunning) {
   writeFile3(details)
   px_database(details)
 
-  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral"))) {  
+  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral","P-Peripheral","P-Central26"))) {  
     ###################################################################################################
     # Create printout of data using visualFields package
     ###################################################################################################

@@ -186,8 +186,8 @@ inputs <- function(){
   tkgrid(eyeLab,tklabel(tt,text="Right"),rb7,tklabel(tt,text="Left"),rb8,
          pady=10,padx=10,sticky="w")
   tkgrid.configure(eyeLab,sticky="s")
-  tkgrid.configure(rb4,rb7,column=2,sticky="w")
-  tkgrid.configure(rb5,rb8,column=3,sticky="e")
+  tkgrid.configure(rb4,rb7,column=1,sticky="e")
+  tkgrid.configure(rb5,rb8,column=3,sticky="ns")
   tkgrid(tklabel(tt,text=""),tklabel(tt,text="Foveal Test?"),cb1,tklabel(tt,text="Full From Prior?"),cb2,pady=10,padx=10,sticky="w")
   tkgrid.configure(cb1,sticky="w")
   tkgrid.configure(cb2,sticky="e",column=3)
@@ -197,7 +197,7 @@ inputs <- function(){
   tkbind(tt,'<Return>', submit)
   tkwait.window(tt)
   
-  return(list(name=aaa,age=bbb,dx=ccc,MRx=iii,OR=jjj,VA=kkk,comments=ddd,gridType=eee,stimSizeRoman=f2,eye=ggg,fovea=hhh,retest=lll,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f1))
+  return(list(name=aaa,age=bbb,dx=ccc,MRx=iii,OR = ifelse(jjj=="","NO LENS",jjj),VA=kkk,comments=ddd,gridType=eee,stimSizeRoman=f2,eye=ggg,fovea=hhh,retest=lll,startTime=format(Sys.time(),"%H.%M.%S"),date=format(Sys.Date(),"%d-%m-%Y"),stimSize=f1))
 }
 
 ###################################################################################################################

@@ -134,7 +134,7 @@ if (gRunning) {
   writeFile3(details)
   px_database(details)
   
-  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral"))) {  
+  if (any(details$gridType == c("30-2","30-1","24-2","Peripheral","P-Peripheral","P-Central26"))) {  
   ###################################################################################################
   # Create printout of data using visualFields package
   ###################################################################################################

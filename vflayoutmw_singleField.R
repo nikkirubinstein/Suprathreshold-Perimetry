@@ -43,7 +43,7 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   ######################################################
   # first plot all graphs
   ######################################################
-  if (vf$tpattern == "peripheralv" || vf$tpattern == "peripheralvi") {
+  if (any(vf$tpattern == c("peripheralv","peripheralvi","pPeriv"))) {
     if (vf$seye == "OS") {
       xmin     <- -90
       xmax     <-  54
@@ -127,11 +127,11 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   pushViewport( tree )
   # map info
   seekViewport( "tdtext" )
-  grid.text( "Total deviation", x = 0.0, y = 1.0, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = 1.5 * sizetxt, fontface = "bold" ) )
+  grid.text( "Total Deviation", x = 0.0, y = 1.0, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = 1.5 * sizetxt, fontface = "bold" ) )
   seekViewport( "senstext" )
   grid.text( "Sensitivity", x = 0.0, y = 1.0, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = 1.5 * sizetxt, fontface = "bold" ) )
   seekViewport( "pdtext" )
-  grid.text( "Pattern deviation", x = 0.0, y = 1.0, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = 1.5 * sizetxt, fontface = "bold" ) )
+  grid.text( "Pattern Deviation", x = 0.0, y = 1.0, just = c( "right", "top" ), gp = gpar( fontfamily = ffamily, fontsize = 1.5 * sizetxt, fontface = "bold" ) )
   
   ######################################################
   # perimetry information
@@ -164,30 +164,54 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
   seekViewport( "typetxt" )
   
   if( vf$tpattern == "p24d2" ) {
-    textpattern <- "Central 24-2, size III"
+    textpattern <- "Central 24-2, Size III"
   } else if( vf$tpattern == "p30d2" ) {
-    textpattern <- "Central 30-2, size III"
+    textpattern <- "Central 30-2, Size III"
   } else if( vf$tpattern == "p10d2" ) {
-    textpattern <- "Central 10-2, size III"
+    textpattern <- "Central 10-2, Size III"
   } else if( vf$tpattern == "p24d2v" ) {
-    textpattern <- "Central 24-2, size V"
+    textpattern <- "Central 24-2, Size V"
   } else if( vf$tpattern == "p30d2v" ) {
-    textpattern <- "Central 30-2, size V"
+    textpattern <- "Central 30-2, Size V"
   } else if( vf$tpattern == "p10d2v" ) {
-    textpattern <- "Central 10-2, size V"
+    textpattern <- "Central 10-2, Size V"
   } else if( vf$tpattern == "p30d1" ) {
-    textpattern <- "Central 30-1, size III"
+    textpattern <- "Central 30-1, Size III"
   } else if( vf$tpattern == "p30d1v" ) {
-    textpattern <- "Central 30-1, size V"
+    textpattern <- "Central 30-1, Size V"
+  } else if (vf$tpattern == "peripheral") {
+    textpattern <- "Peripheral, Size III"
+  } else if (vf$tpattern == "peripheralv") {
+    textpattern <- "Peripheral, Size V"
+  } else if (vf$tpattern == "peripheralvi") {
+    textpattern <- "Peripheral, Size VI"
+  } else if( vf$tpattern == "pPC26" ) {
+    textpattern <- "Polar Central 26, Size III"
+  } else if( vf$tpattern == "pPC26v" ) {
+    textpattern <- "Polar Central 26, Size V"
+  } else if( vf$tpattern == "pPC26vi" ) {
+    textpattern <- "Polar Central 26, Size VI"
+  } else if( vf$tpattern == "pPeri" ) {
+    textpattern <- "Polar Peripheral, Size III"
+  } else if( vf$tpattern == "pPeriv" ) {
+    textpattern <- "Polar Peripheral, Size V"
+  } else if( vf$tpattern == "pPerivi" ) {
+    textpattern <- "Polar Peripheral, Size VI"
+  } else if( vf$tpattern == "pPT" ) {
+    textpattern <- "Polar Total, Size III"
+  } else if( vf$tpattern == "pPTv" ) {
+    textpattern <- "Polar Total, Size V"
+  } else if( vf$tpattern == "pPTvi" ) {
+    textpattern <- "Polar Total, Size VI"
   } else {
     textpattern <- "Unknown"
   }
 
-  text <- paste( textpattern, textalgorithm, sep = ", algorithm ")
+  text <- paste( textpattern, textalgorithm, sep = ", Algorithm ")
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ),
              gp = gpar( fontfamily = ffamily, fontsize = 1.2 * sizetxt, fontface = "bold") )
 
-  text <- paste( textpattern, textalgorithm, sep = ", algorithm ")
+  text <- paste( textpattern, textalgorithm, sep = ", Algorithm ")
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ),
              gp = gpar( fontfamily = ffamily, fontsize = 1.2 * sizetxt , fontface = "bold") )
 
@@ -297,9 +321,9 @@ vflayoutmw_singleField <- function( vf, pwidth = 8.27,
 
   seekViewport( "labeladd" )
   text <- "Foveal Threshold:"
-  text <- paste( text, "Total Num Presentations:", sep = "\n" )
+  text <- paste( text, "Total Presentations:", sep = "\n" )
   text <- paste( text, "Outlier Presentations:", sep = "\n" )
-  text <- paste( text, "Num Mistakes:", sep = "\n" )
+  text <- paste( text, "Mistakes:", sep = "\n" )
   text <- paste( text, "Deleted:", sep = "\n" )
   grid.text( text, x = 0.00, y = 1.00, just = c( "left", "top" ), gp = gpar( fontfamily = ffamily, fontsize = sizetxt ) )
 
