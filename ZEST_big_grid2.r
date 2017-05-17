@@ -805,7 +805,7 @@ details <- practiceQuery()
 while (details$practice == TRUE) {
   gRunning <- TRUE
   opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1,retest = details$retest)
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1)
   tkdestroy(tt)
   pracTestComplete()
   dev.off()
