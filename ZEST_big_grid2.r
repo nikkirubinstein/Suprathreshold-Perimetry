@@ -310,11 +310,12 @@ Zest242 <- function(eye="right", primaryStartValue=30, gridType="24-2",
         ms <- makeStimHelper(-6-14*6 + (cl-1), 6+8*6 - (rw-1))
         state <- ZEST.start(domain=domain, prior=prior, makeStim=ms, 
                               minStimulus=max(0,minDomain),
-                              maxStimulus=40,
-                              tt=ifelse(!is.null(dim(tt)), tt[rw,cl], NA),
-                              fpr=ifelse(!is.null(dim(tt)), fpv, NA),
-                              fnr=ifelse(!is.null(dim(tt)), fnv, NA)
+                              maxStimulus=40#, IMF Feb 2017
+#                              tt=ifelse(!is.null(dim(tt)), tt[rw,cl], NA), IMF Feb 2017
+#                              fpr=ifelse(!is.null(dim(tt)), fpv, NA), IMF Feb 2017
+#                              fnr=ifelse(!is.null(dim(tt)), fnv, NA) IMF Feb 2017
                               )
+        
         state$x <- -6-14*6 + (cl-1)
         state$y <- 6+8*6 - (rw-1)
         
@@ -805,7 +806,8 @@ details <- practiceQuery()
 while (details$practice == TRUE) {
   gRunning <- TRUE
   opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
-  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1,retest = details$retest)
+  #Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1,retest = details$retest) # IMF Feb 2017
+  Zest242(eye=details$eye, primaryStartValue=30, gridType="practice",outlierValue=5,outlierFreq=1) # IMF Feb 2017
   tkdestroy(tt)
   pracTestComplete()
   dev.off()
