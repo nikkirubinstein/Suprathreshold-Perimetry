@@ -15,3 +15,4 @@ vignettes/*.pdf
 # .csv files
 *.csv
 CTR/
+.Rproj.user

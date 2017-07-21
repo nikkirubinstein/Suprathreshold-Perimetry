@@ -1,4 +1,9 @@
-require(tcltk)
+# Code written by Luke Chong
+
+if((!'tcltk' %in% installed.packages()))
+  install.packages("tcltk")
+library(tcltk)
+library(OPI)
 
 timePaused <- 0
 mistakes <- 0
@@ -8,7 +13,7 @@ mywait <- function() {
   tt <- tktoplevel()
   tktitle(tt) <- "Test Paused"
   resume.but <- tkbutton(tt, text='Resume Test', command=function () {
-    pauseTimerStop <<- Sys.time()
+    pauseTimerStop <- Sys.time()
     timePaused <<- timePaused + (pauseTimerStop - pauseTimerStart)
     tkdestroy(tt)
     pause.button()
@@ -21,6 +26,7 @@ mywait <- function() {
     yes <- tkbutton(tt,text="    Yes    ",command= function () {
       tkdestroy(tt)
       gRunning <<- FALSE
+      opiClose()
       print("Test terminated by operator")
     })
     no <- tkbutton(tt,text= "    No    ",command= function () {
@@ -49,7 +55,7 @@ mywait <- function() {
     undoTclList <- as.TclList(undo)
     comboBox <- .Tk.subwin(tt)
     .Tcl(paste("ComboBox",.Tk.ID(comboBox),"-editable false -values",undoTclList))
-
+    
     submit.but <- tkbutton(tt, text="   Submit   ", command= function () {
       e <- undo[[as.numeric(tclvalue(tcl(comboBox,"getvalue")))+1]]
       gUndos <<- e
@@ -83,7 +89,7 @@ mywait <- function() {
 }
 
 pause.button <- function() {
-  tt <<- tktoplevel()
+  tt <- tktoplevel()
   tkpack(tkbutton(tt, text = "Pause Test", 
                   command = function() {
                     pauseTimerStart <<- Sys.time()
@@ -103,7 +109,7 @@ pause.button <- function() {
 pauseAtStart <- function() {
   tt <- tktoplevel()
   tktitle(tt) <- "Press button to begin test"
-  tkgrid(tklabel(tt,text=paste("Press button to start\n",details$grid," test",sep="")),sticky="new",padx=20)
+  tkgrid(tklabel(tt,text=paste("Press button to start\nsuprathreshold test",sep="")),sticky="new",padx=20)
   tkgrid(tkbutton(tt,text='Begin Test', command=function () {
     tkdestroy(tt)
     pause.button()
@@ -129,26 +135,26 @@ pauseAtStartFovea <- function() {
   tkwait.window(tt)
 }
 
-fovealTestComplete <- function (threshold) {
-  tt <- tktoplevel()
-  tktitle(tt) <- "Test Complete"
-  yes.but <- tkbutton(tt, text = " Yes ", command = function() {
-    tkdestroy(tt)
-  })
-  
-  no.but <- tkbutton(tt, text = " No ", command = function() {
-    tkdestroy(tt)
-    .GlobalEnv$details$fovea <- FALSE
-  })
-  
-  tkgrid(tklabel(tt,text=paste0("Foveal threshold is ",round(threshold)," dB.   \n 
-            Do you want to repeat this test?    ")),padx=10,pady=10,columnspan=9)
-  tkgrid(yes.but, no.but,sticky="sew",pady=10,padx=5)
-  tkgrid.configure(yes.but,column=3,columnspan=1)
-  tkgrid.configure(no.but,column=5,columnspan=1)
-  tkfocus(tt)
-  tkwait.window(tt)
-}
+# fovealTestComplete <- function (threshold) {
+#   tt <- tktoplevel()
+#   tktitle(tt) <- "Test Complete"
+#   yes.but <- tkbutton(tt, text = " Yes ", command = function() {
+#     tkdestroy(tt)
+#   })
+#   
+#   no.but <- tkbutton(tt, text = " No ", command = function() {
+#     tkdestroy(tt)
+#     .GlobalEnv$details$fovea <- FALSE
+#   })
+#   
+#   tkgrid(tklabel(tt,text=paste0("Foveal threshold is ",round(threshold)," dB.   \n 
+#                                 Do you want to repeat this test?    ")),padx=10,pady=10,columnspan=9)
+#   tkgrid(yes.but, no.but,sticky="sew",pady=10,padx=5)
+#   tkgrid.configure(yes.but,column=3,columnspan=1)
+#   tkgrid.configure(no.but,column=5,columnspan=1)
+#   tkfocus(tt)
+#   tkwait.window(tt)
+# }
 
 pracTestComplete <- function () {
   tkmessageBox(title = "", message = "Practice Test Complete!", icon = "warning")
@@ -160,18 +166,18 @@ testComplete<- function () {
   no.but <- tkbutton(tt,text= "    No    ",command= function () {
     tkdestroy(tt)
     tt <- tktoplevel()
-  
+    
     yes <- tkbutton(tt,text="    Yes    ",command= function () {
       tkdestroy(tt)
       gRunning <<- FALSE
       graphics.off()
     })
-  
+    
     no <- tkbutton(tt,text= "    No    ",command= function () {
       tkdestroy(tt)
       testComplete()
     })
-  
+    
     tkgrid(tklabel(tt,text="Are you sure you want to discard test without saving?"),padx=10,pady=10,columnspan=3,sticky="w")
     tkgrid(yes,no,sticky="e",pady=20,padx=5)
     tkwait.window(tt)
@@ -181,4 +187,3 @@ testComplete<- function () {
   tkgrid(yes.but,no.but,sticky="sew",pady=20,padx=5)
   tkwait.window(tt)
 }
-

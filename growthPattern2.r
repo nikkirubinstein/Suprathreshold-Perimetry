@@ -67,7 +67,9 @@
 #           n is number of presentations at each location
 ####################################################################
 #source("testStatusOutput.r")
-require("audio")
+if((!'audio' %in% installed.packages()))
+  install.packages("audio")
+library("audio")
 
 procedureWithGrowthPattern <- function(startTime,gp,gn,starts, startFun, stepFun, stopFun, finalFun,gridPat,
         catchTrialLoadFreq=6,
