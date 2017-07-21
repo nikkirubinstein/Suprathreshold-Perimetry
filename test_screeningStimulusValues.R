@@ -36,8 +36,12 @@ normativeData <- function(age = 85,    # age of subject
               maxInt = 4000){ # eye to be tested
 
   # setwd( wd ) # set working directory to source file location
-  if((!'visualFields' %in% installed.packages()) | (installed.packages()[grep(pattern = 'visualFields', installed.packages()),]['Version'] != 0.5))
-    install.packages("./visualFields_0.5.tar.gz", repos = NULL, type="source")
+  if((!'visualFields' %in% installed.packages()) | (installed.packages()[grep(pattern = 'visualFields', installed.packages()),]['Version'] != 0.5)){
+    install.packages("spatstat")
+    install.packages("deldir")
+    install.packages("gtools")
+    install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
+  }
   library( visualFields ) # to be used with visualFields 0.5, make sure this version is installed
   
   load( "nvsapmw_pointwise.rda" ) # the pointwise normative values calculated from M Wall's dataset of healthy eyes

@@ -115,8 +115,9 @@ suprathreshold_PV2 <- function(#eye="right",
   if (practice){
     details <- practiceQuery()
     if (!details$practice){
-      print("No practice test will be performed/nMoving on to the real test!")
-      tkdestroy(tt)
+      print("No practice test will be performed")
+      print("Moving on to the real test!")
+      # tkdestroy(tt)
       return(list(practice = FALSE))
     }
   } else {
@@ -434,13 +435,13 @@ suprathreshold_PV2 <- function(#eye="right",
                 resp_buzzer = resp_buzzer)
     windows(700,250)
     # opiSetBackground(fixation=.Octopus900Env$FIX_CENTRE,lum=.Octopus900Env$BG_10)
-    pauseAtStart()
+    pauseAtStart(ifelse(practice, "practice", "suprathreshold"))
     # commence <<- Sys.time()
     # gRunning <<- TRUE
-    res1 <- procedureSuprathreshold(details$startTime, 
-                                    testIntensities, 
-                                    makeStim,
-                                    details,
+    res1 <- procedureSuprathreshold(startTime = details$startTime, 
+                                    testIntensities = testIntensities, 
+                                    makeStim = makeStim,
+                                    details = details,
                                     respWinBuffer=250,
                                     FPLevel=55, 
                                     FNDelta=10,
@@ -453,19 +454,25 @@ suprathreshold_PV2 <- function(#eye="right",
                                     maxInt = maxInt,
                                     directory = directory)
     
-    if(!practice){
-      pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
+    if(!practice & gRunning){
+      windows(900,350)
       with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
-      dev.off()
-      comments <- finalComments()
-      details$comments <- paste(details$comments,comments,sep=" ")
-      writeFile(directory, details, res1)
-      writeFile2(directory, details, res1)
-      writeFile3(directory, details, res1)
-      px_database(details)
+      testComplete()
+      if (gRunning){
+        pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
+        with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
+        dev.off()
+        comments <- finalComments()
+        details$comments <- paste(details$comments,comments,sep=" ")
+        writeFile(directory, details, res1)
+        writeFile2(directory, details, res1)
+        writeFile3(directory, details, res1)
+        px_database(details)
+      }
+      
     }
-    opiClose()
-    tkdestroy(tt)
+    tryCatch(opiClose(), error = function(x){})
+    # tkdestroy(tt)
       # res1 <- procedureWithGrowthPattern(details$startTime,growthPattern, growthNext, onePriors, startF, stepF, stopF, finalF,
       #       gridPat=growthPattern,
       #       respWinBuffer=250,
@@ -479,7 +486,7 @@ suprathreshold_PV2 <- function(#eye="right",
       #       minInterStimInt = minInterStimInterval)
 
     #z <- res1$t < 0
-    tz <- res1$tr
+    # tz <- res1$tr
     #tz[z] <- 0
     
 #     #########################################################################
@@ -569,7 +576,7 @@ suprathreshold_PV2 <- function(#eye="right",
 #     } else {
       # res <- list(n=res1$n, ae=abs(tz-tt), th=res1$t, trues=tt,fp_counter=res1$fpc,fn_counter=res1$fnc,rt=res1$rt, practice = res1$practice)
 #     }
-    return(res1)
+    return(c(res1, practice = practice, details = list(details)))
 }
 
 # ###########################################################################################
@@ -845,7 +852,7 @@ writeFile3 <- function (directory,details,res){
   # if (details$eye == "left") {
   #     th <- grid.flip(z$th)
   # } else {th <- z$th}
-  thresholds <- matrix(round(t(th)[!is.na(t(th))]),1,sum(!is.na(th)))
+  # thresholds <- matrix(round(t(th)[!is.na(t(th))]),1,sum(!is.na(th)))
   
   # if (!is.null(z$thOutliers)) {
   #   if (details$eye == "left"){
@@ -933,9 +940,11 @@ while (res$practice == TRUE) {
   # gRunning <- TRUE
   # opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",eye=details$eye,gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
   res <- suprathreshold_PV2(practice = TRUE, eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",gazeFeed=0,bigWheel=TRUE,resp_buzzer = 3)
-  tkdestroy(tt)
-  pracTestComplete()
-  dev.off()
+  if(res$practice){
+    pracTestComplete()
+    dev.off()
+    tkdestroy(tt)
+  }
   # details <- practiceQuery()
   # opiClose()
 }
@@ -961,15 +970,11 @@ res <- suprathreshold_PV2(practice = FALSE, eyeSuiteSettingsLocation="C:/Program
 
 
 # terminate <- Sys.time()
-# tkdestroy(tt)  # closes the pause button upon completion of the test
+tkdestroy(tt)  # closes the pause button upon completion of the test
 # opiClose()
 graphics.off()
 
-if (gRunning) {
-  windows(900,350)
-  testStatusFinal(res)
-  testComplete()
-}
+
 # 
 # if (gRunning) {
 #   pdf(file = paste0(details$dx,"/",details$gridType," ",details$stimSizeRoman,"/",details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf"),width=14,height=6)

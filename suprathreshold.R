@@ -150,7 +150,7 @@ procedureSuprathreshold <- function(
   presentCatch <- function(posOrNeg, responseWindow, currentIntensities, testLocationsResponse,index, maxInt) {
         if (posOrNeg == "POS") {
             s <- list(x=testLocationsResponse[index,1], y=testLocationsResponse[index,2], level=FPLevel, size=FPSize, duration=200,
-                  responseWindow=responseWindow)
+                  responseWindow=round(responseWindow))
         } else {
             # check which locations have terminated with a seen response and use a brighter stimulus than last seen
           k <- which(testLocationsResponse$terminated & 
@@ -161,14 +161,14 @@ procedureSuprathreshold <- function(
             s <- list(x=testLocationsResponse[l,1], y=testLocationsResponse[l,2], 
                       level=dbTocd(round(currentIntensities[l] - FNDelta),maxInt/pi),
                       size=FNSize, duration=200,
-                      responseWindow=responseWindow)
+                      responseWindow=round(responseWindow))
         }
         class(s) <- "opiStaticStimulus"
         
         if (moveProj) {
           s2 <- list(x=testLocationsResponse[index,1], y=testLocationsResponse[index,2], 
                      level=FPLevel, size=FPSize, duration=200,
-                     responseWindow=responseWindow)
+                     responseWindow=round(responseWindow))
           class(s2) <- "opiStaticStimulus"
           showStim <- opiPresent(stim=s,nextStim = s2)
                                  
@@ -191,14 +191,14 @@ procedureSuprathreshold <- function(
     stimulus <- sample(0:30, 1) # choose a stimulus intensity at random     
     s <- list(x=testIntensities[locIndex, 'x'], y=testIntensities[locIndex, 'y'],
                 # dummyState(30,loc[1],loc[2])$x,y=dummyState(30,loc[1],loc[2])$y,
-                level=dbTocd(stimulus, maxInt/pi),size=FNSize,duration=200,responseWindow=responseWindow)
+                level=dbTocd(stimulus, maxInt/pi),size=FNSize,duration=200,responseWindow=round(responseWindow))
     
       class(s) <- "opiStaticStimulus"
       
       if (moveProj) {
         s2 <- list(x=testIntensities[index[1], 'x'], y=testIntensities[index[1], 'y'],
                    # dummyState(30,loc[1],loc[2])$x,y=dummyState(30,loc[1],loc[2])$y,
-                   level=dbTocd(stimulus, maxInt/pi),size=FNSize,duration=200,responseWindow=responseWindow)
+                   level=dbTocd(stimulus, maxInt/pi),size=FNSize,duration=200,responseWindow=round(responseWindow))
         class(s2) <- "opiStaticStimulus"
     
         showStim <- c(opiPresent(stim=s,nextStim = s2))
@@ -354,7 +354,7 @@ procedureSuprathreshold <- function(
     # what is gRunning?
     while (length(idx.testLocationsResponse) > 0 && gRunning) {
         start_time <- Sys.time()
-        applyUndos() # fix this function
+        applyUndos() 
       
         if ((counter <= 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialLoadFreq == 0) && ((counter/catchTrialLoadFreq) %% 2 != 0)) ||
             (counter > 60 && length(fp_counter) < catchTrialMax && (counter %% catchTrialFreq == 0) && ((counter/catchTrialFreq) %% 2 != 0))) {
@@ -430,26 +430,25 @@ procedureSuprathreshold <- function(
         # states[[rw,cl]] <- setResponseWindow(states[[rw,cl]],respWinBuffer,mean(respWin))  #Updates response window
         respWinCurrent <- respWinBuffer + mean(respWin)
         
+        stim <- makeStim(x = testIntensities$x[index[1]],
+                         y = testIntensities$y[index[1]], 
+                         stimSize = details$stimSize, 
+                         responseWindow = round(respWinCurrent), 
+                         db = testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]])
         if (length(idx.testLocationsResponse) > 1 && moveProj == TRUE) {
           # states[[rw,cl]] <- stepFun(states[[rw,cl]],nextStimState=states[[rw2,cl2]])
-          result <- opiPresent(stim = makeStim(x = testIntensities$x[index[1]],
-                                               y = testIntensities$y[index[1]], 
-                                               stimSize = details$stimSize, 
-                                               responseWindow = respWinCurrent, 
-                                               db = testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]),
-                               nextStim = makeStim(x = testIntensities$x[index[2]],
-                                                   y = testIntensities$y[index[2]], 
-                                                   stimSize = details$stimSize, 
-                                                   responseWindow = respWinCurrent, 
-                                                   db = 0))
+          params <- list(stim = stim, nextStim = makeStim(x = testIntensities$x[index[2]],
+                               y = testIntensities$y[index[2]], 
+                               stimSize = details$stimSize, 
+                               responseWindow = round(respWinCurrent), 
+                               db = 0))
         } else {
-          result <- opiPresent(stim = makeStim(x = testIntensities$x[index[1]],
-                                               y = testIntensities$y[index[1]], 
-                                               stimSize = details$stimSize, 
-                                               responseWindow = respWinCurrent, 
-                                               db = testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]))
+          params <- list(stim = stim)
+          # result <- opiPresent(stim)
           # states[[rw,cl]] <- stepFun(states[[rw,cl]])
         }
+        # print(params)
+        result <- do.call(opiPresent, params)
         
         # if (all(details$gridType != c("Peripheral","P-Peripheral","P-Edge"))) {
           interStimInt(respTime,minInterStimInt)#}

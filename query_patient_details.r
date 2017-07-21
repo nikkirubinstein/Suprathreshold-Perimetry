@@ -91,6 +91,9 @@ inputs <- function(){
     px <- patient_list[order(patient_list$ID),] # Arrange patients in alphabetical or numerical order
     if (px$ID[1] == ""){
       val <- c('1' = "There are no patients in the database", '2' = "")
+    } else if (nrow(px) == 1) {
+      px <- rbind(px, data.frame("ID" = "","Age" = "","Diagnosis" = "","Manifest_Rx" = "","ORx" = "","VA" = "","Comments" = "","Grid" = "","Stimulus_Size" = "","Eye" = ""))
+      val <- c('1' = paste0(px[1,1],": ",px[1,10]," eye"), '2' = "")
     } else {
       val <- apply(px,1, function (x) {paste0(x[1],": ",x[10]," eye")})
     }

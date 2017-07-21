@@ -26,7 +26,6 @@ mywait <- function() {
     yes <- tkbutton(tt,text="    Yes    ",command= function () {
       tkdestroy(tt)
       gRunning <<- FALSE
-      opiClose()
       print("Test terminated by operator")
     })
     no <- tkbutton(tt,text= "    No    ",command= function () {
@@ -89,7 +88,7 @@ mywait <- function() {
 }
 
 pause.button <- function() {
-  tt <- tktoplevel()
+  tt <<- tktoplevel()
   tkpack(tkbutton(tt, text = "Pause Test", 
                   command = function() {
                     pauseTimerStart <<- Sys.time()
@@ -106,10 +105,10 @@ pause.button <- function() {
   tkfocus(tt)
 }
 
-pauseAtStart <- function() {
+pauseAtStart <- function(test) {
   tt <- tktoplevel()
   tktitle(tt) <- "Press button to begin test"
-  tkgrid(tklabel(tt,text=paste("Press button to start\nsuprathreshold test",sep="")),sticky="new",padx=20)
+  tkgrid(tklabel(tt,text=paste0("Press button to start\n", test," test")),sticky="new",padx=20)
   tkgrid(tkbutton(tt,text='Begin Test', command=function () {
     tkdestroy(tt)
     pause.button()
