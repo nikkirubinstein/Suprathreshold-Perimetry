@@ -111,7 +111,8 @@ suprathreshold_PV2 <- function(
                 eye = details$eye,
                 gazeFeed = gazeFeed,
                 bigWheel = bigWheel,
-                resp_buzzer = resp_buzzer)
+                resp_buzzer = resp_buzzer, 
+                zero_dB_is_10000_asb = (maxInt == 10000))
   
   # open external display window
   windows(700,250)
