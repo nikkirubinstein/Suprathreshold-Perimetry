@@ -2,10 +2,12 @@
 # 22/02/2015
 # function written by Luke Chong to enter patient details
 # uses tcltk package
+#
+# Modified by Nikki Rubinstein for screening test
+# 24 July 2017
 #############################################################
-if((!'tcltk' %in% installed.packages()))
-  install.packages("tcltk")
-library(tcltk)
+source("libraryCheckFunction.R")
+libraryCheck("tcltk")
 tclRequire("BWidget")
 
 inputs <- function(){
@@ -83,7 +85,7 @@ inputs <- function(){
     tkdestroy(tt)
     patient_list <- tryCatch(read.csv(file.path("..", "patient_list.txt")),
                              error = function(x){
-                               data.frame("ID" = c("", ""),"Age" = c("", ""),"Diagnosis" = c("", ""),"Manifest_Rx" = c("", ""),"ORx" = c("", ""),"VA" = c("", ""),"Comments" = c("", ""),"Grid" = c("", ""),"Stimulus_Size" = c("", ""),"Eye" = c("", ""))
+                               data.frame("ID" = c("", ""),"Age" = c("", ""),"Diagnosis" = c("", ""),"Manifest_Rx" = c("", ""),"ORx" = c("", ""),"VA" = c("20/20","20/20"),"Comments" = c("", ""),"Grid" = c("", ""),"Stimulus_Size" = c("", ""),"Eye" = c("right", "right"))
                                # names(a) <- c("ID","Age","Diagnosis","Manifest_Rx","ORx","VA","Comments","Grid","Stimulus_Size","Eye")
                                # return(a)
                              })
@@ -92,7 +94,7 @@ inputs <- function(){
     if (px$ID[1] == ""){
       val <- c('1' = "There are no patients in the database", '2' = "")
     } else if (nrow(px) == 1) {
-      px <- rbind(px, data.frame("ID" = "","Age" = "","Diagnosis" = "","Manifest_Rx" = "","ORx" = "","VA" = "","Comments" = "","Grid" = "","Stimulus_Size" = "","Eye" = ""))
+      px <- rbind(px, data.frame("ID" = "","Age" = "","Diagnosis" = "","Manifest_Rx" = "","ORx" = "","VA" = "20/20","Comments" = "","Grid" = "","Stimulus_Size" = "","Eye" = "right"))
       val <- c('1' = paste0(px[1,1],": ",px[1,10]," eye"), '2' = "")
     } else {
       val <- apply(px,1, function (x) {paste0(x[1],": ",x[10]," eye")})
@@ -277,6 +279,11 @@ practiceQuery <- function () {
     tkwm.title(tt,"")
     
     yes <- function() {
+      if (tclvalue(var2) == "") {
+        tkmessageBox(message = "Please enter patient age", icon = "warning", type = "ok")
+      } else if (is.na(as.numeric(tclvalue(var2)))){
+        tkmessageBox(message = "Please enter a numeric value for the patient's age", icon = "warning", type = "ok")
+      } else {
         # a <- tclvalue(rbValue1)
         b <- tclvalue(rbValue2)
         d <- tclvalue(var2)
@@ -299,7 +306,7 @@ practiceQuery <- function () {
         
         tkdestroy(tt)
         env$prac <- TRUE
-    }
+    }}
     
     no <- function () {
       tkdestroy(tt)

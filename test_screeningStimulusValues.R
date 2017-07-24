@@ -23,13 +23,6 @@
 #   make into function normativeData, which takes two arguments: age and eye ('OD' or 'OS')
 #   visualFields_0.5.tar.gz and nvsapmw_pointwise.rda need to be stored in the same location as this file
 
-# parameters to change:
-# working directory: change to the folder where this code resides.
-# wd  <- "/Users/ivanmarin-franch/03.glaucoma/03.projects/24.MikeWall/02.screeningFullPeriphery"
-# wd <- "D:/Mike Wall/Suprathreshold-Perimetry/"
-# age <- 85   # age of the subject to calculate the 1% and 5% attenuation in dB for stimulus presentation
-# eye <- "OD" # eye to be tested
-
 # wd <- dirname(parent.frame(2)$ofile) 
 normativeData <- function(age = 85,    # age of subject
               eye = "right",
@@ -84,18 +77,3 @@ normativeData <- function(age = 85,    # age of subject
   names(agelms)[1:2] <- c('x', 'y')
   return(agelms)
 }
-# 
-# pdf( file = "sens_meanNormal.pdf", width = 15, height = 10 )
-# plot( locmap$xod, locmap$yod, typ = "n" )
-# text( locmap$xod, locmap$yod, as.character( round( msens5 ) ) )
-# dev.off()
-# 
-# pdf( file = "sens_percentile5.pdf", width = 15, height = 10 )
-# plot( locmap$xod, locmap$yod, typ = "n" )
-# text( locmap$xod, locmap$yod, as.character( round( msens5 ) ) )
-# dev.off()
-# 
-# pdf( file = "sens_percentile1.pdf", width = 15, height = 10 )
-# plot( locmap$xod, locmap$yod, typ = "n" )
-# text( locmap$xod, locmap$yod, as.character( round( msens1 ) ) )
-# dev.off()

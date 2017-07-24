@@ -16,3 +16,6 @@ vignettes/*.pdf
 *.csv
 CTR/
 .Rproj.user
+
+# Data files
+.RData

@@ -4,7 +4,9 @@
 ###################################################################################################
 # Create printout of data using visualFields package
 ###################################################################################################
-  library(visualFields)
+  source("libraryCheckFunction.R")
+  libraryCheck("visualFields")
+
 ################################################################################
 # load patches to visualFields, as new normative values, locations map, etc here
 ################################################################################

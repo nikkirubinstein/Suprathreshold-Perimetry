@@ -1,9 +1,14 @@
+####################################################################
+# Functions for interactive GUI
 # Code written by Luke Chong
+#
+# modified by Nikki Rubinstein for screening test
+# 24 July 2017
+####################################################################
 
-if((!'tcltk' %in% installed.packages()))
-  install.packages("tcltk")
-library(tcltk)
-library(OPI)
+source("libraryCheckFunction.R")
+libraryCheck("tcltk")
+libraryCheck("OPI")
 
 timePaused <- 0
 mistakes <- 0
