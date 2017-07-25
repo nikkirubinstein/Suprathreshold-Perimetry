@@ -260,8 +260,10 @@ procedureSuprathreshold <- function(
 
         counter <- counter + 1
       
-        if (length(idx.testLocationsResponse) > 1) {
+        if (length(idx.testLocationsResponse) > 2) {
           index[2] <- sample(idx.testLocationsResponse[idx.testLocationsResponse != index[1]],1)
+        } else if (length(idx.testLocationsResponse) == 2) {
+          index[2] <- idx.testLocationsResponse[idx.testLocationsResponse != index[1]]
         } else {
           index[1] <- idx.testLocationsResponse
           index[2] <- idx.testLocationsResponse
@@ -271,6 +273,8 @@ procedureSuprathreshold <- function(
      
         respWinCurrent <- respWinBuffer + mean(respWin)
         
+        if (is.null(testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]))
+          next
         stim <- makeStim(x = testIntensities$x[index[1]],
                          y = testIntensities$y[index[1]], 
                          stimSize = details$stimSize, 
@@ -329,8 +333,8 @@ procedureSuprathreshold <- function(
           respTime <- c(result$time,respTime)
         }
 
-        if (all(testLocationsResponse$terminated))
-          finished_counter <- finished_counter + 1
+        # if (all(testLocationsResponse$terminated))
+          # finished_counter <- finished_counter + 1
         index[1] <- index[2]
     }
     

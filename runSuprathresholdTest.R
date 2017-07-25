@@ -4,6 +4,7 @@
 # Nikki Rubinstein
 # 24 July 2017
 #############################################################
+rm(list=ls())
 setwd(dirname(parent.frame(2)$ofile))
 source("suprathreshold_polar_v.2.R")
 source("libraryCheckFunction.R")
@@ -11,6 +12,7 @@ source("libraryCheckFunction.R")
 # load OPI package
 libraryCheck("OPI")
 chooseOpi("Octopus900")
+# chooseOpi("SimHenson")
 
 # choose the OPI maximum brightness in asb (4000 or 10000)
 maxInt <- 4000
@@ -33,7 +35,8 @@ while (practice) {
     eyeSuiteSettingsLocation = "C:/ProgramData/Haag-Streit/EyeSuite/",
     gazeFeed = 0,
     bigWheel = TRUE,
-    resp_buzzer = 3)
+    resp_buzzer = 3,
+    subGrids = 'practice')
   
   practice <- res$practice
   if (practice){
@@ -50,7 +53,8 @@ res <- suprathreshold_PV2(
   eyeSuiteSettingsLocation = "C:/ProgramData/Haag-Streit/EyeSuite/",
   gazeFeed = 0,
   bigWheel = TRUE,
-  resp_buzzer = 3)
+  resp_buzzer = 3,
+  subGrids = c('central', 'peripheral'))
 
 graphics.off()
 

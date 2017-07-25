@@ -25,8 +25,9 @@
 
 # wd <- dirname(parent.frame(2)$ofile) 
 normativeData <- function(age = 85,    # age of subject
-              eye = "right",
-              maxInt = 4000){ # eye to be tested
+              eye = "right",           # eye to be tested
+              maxInt = 4000,           # maximum stimulus intensity of the perimeter
+              subGrid = 'total'){      # sub grid - 'total', 'central', 'peripheral' or 'practice'
 
   # setwd( wd ) # set working directory to source file location
   if((!'visualFields' %in% installed.packages()) | (installed.packages()[grep(pattern = 'visualFields', installed.packages()),]['Version'] != 0.5)){
@@ -42,10 +43,6 @@ normativeData <- function(age = 85,    # age of subject
   # testing locations for the central PC26 and peripheral Peri locations from visualFields package
   locmapc <- saplocmap$pPC26v[,c(1,2)] # central test
   locmapp <- saplocmap$pPeriv[,c(1,2)] # peripheral test
-  locmap  <- rbind( locmapc, locmapp ) # merge all locations
-  
-  # if eye is OS then, change x locations
-  if( eye == "left" ) locmap$xod <- -locmap$xod
   
   # probability categories for the normative values for size V: we are interested on 1% and 5%
   pmap <- nvsapmw$pmapsettings$cutoffs
@@ -54,14 +51,43 @@ normativeData <- function(age = 85,    # age of subject
   tdcent5 <- nvsapmw$pPC26v_zest$TDpercloc[,which( pmap == 5 )] # 5% percentile for the central test
   tdperi1 <- nvsapmw$pPeriv_zest$TDpercloc[,which( pmap == 1 )] # 1% percentile for the central test
   tdperi5 <- nvsapmw$pPeriv_zest$TDpercloc[,which( pmap == 5 )] # 5% percentile for the central test
-  td1     <- c( tdcent1, tdperi1 ) # merge 1% TDs for all central and peripheral locations
-  td5     <- c( tdcent5, tdperi5 ) # merge 5% TDs for all central and peripheral locations
   
   # retrieve age linear model
   agelmc <- nvsapmw$pPC26v_zest$agelm
   agelmp <- nvsapmw$pPeriv_zest$agelm
-  agelm  <- rbind( agelmc, agelmp ) # merge linear models for all locations
-  # obtain mean normal sensitivities from the age of the subject
+  
+  # choose appropriate subGrid
+  if (subGrid == 'total' | subGrid == 'practice') {
+    locmap  <- rbind( locmapc, locmapp ) # merge all locations
+    td1     <- c( tdcent1, tdperi1 )     # merge 1% TDs for all central and peripheral locations
+    td5     <- c( tdcent5, tdperi5 )     # merge 5% TDs for all central and peripheral locations
+    agelm   <- rbind( agelmc, agelmp )    # merge linear models for all locations
+  } else if ( subGrid == 'central') {
+    locmap  <- locmapc # central locations
+    td1     <- tdcent1 # 1% TDs for all central locations
+    td5     <- tdcent5 # 5% TDs for all central locations
+    agelm   <- agelmc  # linear models for all central locations
+  } else if (subGrid == 'peripheral') {
+    locmap  <- locmapp # peripheral locations
+    td1     <- tdperi1 # 1% TDs for all peripheral locations
+    td5     <- tdperi5 # 5% TDs for all peripheral locations
+    agelm   <- agelmp  # linear models for all peripheral locations
+  } else {
+    stop(paste(subGrid, "is not a valid subGrid entry for function normativeData()"))
+  }
+  
+  if (subGrid == "practice"){
+    idx    <- seq(1,nrow(locmap),length.out = 8)
+    locmap <- locmap[idx,]
+    td1    <- td1[idx]
+    td5    <- td5[idx]
+    agelm  <- agelm[idx,]
+  }
+  
+  # if eye is OS then, change x locations
+  if( eye == "left" ) locmap$xod <- -locmap$xod
+
+    # obtain mean normal sensitivities from the age of the subject
   msens <- agelm$intercept + agelm$slope * age
   
   # calculate conversion factor for maximum brightness value to be used

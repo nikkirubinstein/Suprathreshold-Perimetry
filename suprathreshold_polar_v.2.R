@@ -11,9 +11,6 @@
 ####################################################################################
 
 
-rm(list=ls())
-wd <- dirname(parent.frame(2)$ofile) 
-setwd(wd)
 source("test_screeningStimulusValues.R")
 source("query_patient_details.r")
 source("suprathreshold.R")
@@ -34,6 +31,7 @@ source("testStatusOutput.r")
 #   gazeFeed                 - logical indicating whether gaze tracking should be used
 #   bigWheel                 - logical indicating whether the larger aperture wheel should be used
 #   resp_buzzer              - integer (0 - 3) representing buzzer volume
+#   subGrids                 - 'total', 'central', 'peripheral' or 'practice'
 #   
 # RETURNS: a list with
 #    ti   - data.frame of test intensities - x, y, stimulus intensities
@@ -61,7 +59,8 @@ suprathreshold_PV2 <- function(
                            eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",
                            gazeFeed=0,
                            bigWheel=TRUE,
-                           resp_buzzer = 3) {
+                           resp_buzzer = 3,
+                           subGrids = c('central', 'peripheral')) {
   
   ##################################################################
   # get patient details
@@ -80,17 +79,6 @@ suprathreshold_PV2 <- function(
       dir.create(directory, recursive = TRUE)
   }
   
-  ##################################################################
-  # get test intensity values
-  # capped at a minimum of 15 dB
-  ##################################################################
-  testIntensities <- normativeData(
-       age = as.numeric(details$age), 
-       eye = details$eye, 
-    maxInt = maxInt)
-  testIntensities[, -(1:2)][which(testIntensities[, -(1:2)] < minStimIntensity, arr.ind = TRUE)] <- minStimIntensity
-  if (practice)
-    testIntensities <- testIntensities[round(seq(1,nrow(testIntensities),length.out = 8)),]
    
   ###################################################################
   # helper function used to make stimuli of class opiStaticStimulus  
@@ -106,47 +94,88 @@ suprathreshold_PV2 <- function(
       return(s)
     }
           
-  # initialise perimeter
-  opiInitialize(eyeSuiteSettingsLocation = eyeSuiteSettingsLocation,
+    ###################################################################
+    # helper function used to combine results from two separate calls
+    # to procedureSuprathreshold() 
+    ###################################################################
+    combineOutput <- function (r1, r2){
+      if (!length(r1)){
+        return(r2)}
+      mapply(function(x, y){ 
+        # browser()
+        if (typeof(y) == "list"){
+          rbind(x, y)
+        } else if (length(y) == 1){
+          y
+        } else {
+          c(x, y)
+        }
+      }, r1, r2, SIMPLIFY = FALSE)
+    }
+
+    
+    ##################################################################
+    # initialise perimeter
+    ##################################################################
+    opiInitialize(eyeSuiteSettingsLocation = eyeSuiteSettingsLocation,
                 eye = details$eye,
                 gazeFeed = gazeFeed,
                 bigWheel = bigWheel,
-                resp_buzzer = resp_buzzer, 
+                resp_buzzer = resp_buzzer,
                 zero_dB_is_10000_asb = (maxInt == 10000))
-  
-  # open external display window
-  windows(700,250)
-  
+
   # set fixation marker
   opiSetBackground(
     fixation = .Octopus900Env$FIX_CENTRE,
     lum = .Octopus900Env$BG_10)
-  
-  # prompt user to begin test
-  pauseAtStart(ifelse(practice, "practice", "suprathreshold"))
 
-  # run screening procedure
-  res1 <- procedureSuprathreshold(startTime = details$startTime, 
-                                  testIntensities = testIntensities, 
-                                  makeStim = makeStim,
-                                  details = details,
-                                  respWinBuffer=250,
-                                  FPLevel=55, 
-                                  FNDelta=10,
-                                  FNPause=300,
-                                  FNLocationThreshold=20,
-                                  FPSize=as.numeric(details$stimSize),
-                                  FNSize=as.numeric(details$stimSize),
-                                  moveProj = moveProjector,
-                                  minInterStimInt = minInterStimInterval,
-                                  maxInt = maxInt,
-                                  directory = directory)
+  # opiInitialize(type="C", A=NA, B=NA, cap=6, display=NULL, maxStim=10000/pi)
+  
+  
+  # open external display window
+  windows(700,250)
+  
+  res1 <- list()
+  for (subGrid in subGrids){
     
+    ##################################################################
+    # get test intensity values
+    # capped at a minimum of 15 dB
+    ##################################################################
+    testIntensities <- normativeData(
+      age = as.numeric(details$age), 
+      eye = details$eye, 
+      maxInt = maxInt,
+      subGrid = subGrid)
+    testIntensities[, -(1:2)][which(testIntensities[, -(1:2)] < minStimIntensity, arr.ind = TRUE)] <- minStimIntensity
+    
+    # prompt user to begin test
+    pauseAtStart(subGrid)
+    
+    # run screening procedure
+    res <- procedureSuprathreshold(startTime = details$startTime, 
+                                    testIntensities = testIntensities, 
+                                    makeStim = makeStim,
+                                    details = details,
+                                    respWinBuffer=250,
+                                    FPLevel=55, 
+                                    FNDelta=10,
+                                    FNPause=300,
+                                    FNLocationThreshold=20,
+                                    FPSize=as.numeric(details$stimSize),
+                                    FNSize=as.numeric(details$stimSize),
+                                    moveProj = moveProjector,
+                                    minInterStimInt = minInterStimInterval,
+                                    maxInt = maxInt,
+                                    directory = directory)
+    res1 <- combineOutput(res1, res)
+    tkdestroy(tt) # destroy pause button
+  }  
   # save results
   if(!practice & gRunning){
     windows(900,350)
     with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
-    tkdestroy(tt) # destroy pause button
+    # tkdestroy(tt) # destroy pause button
     testComplete()
     if (gRunning){
       pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
