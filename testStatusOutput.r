@@ -39,7 +39,11 @@ testStatus <- function (stimResponse,stimX, stimY,
                         respTime,plotStimResponse=TRUE,
                         details, testLocationsResponse, 
                         currentIntensities,
-                        final = F) {
+                        subGrid) {
+  
+  gridType <- c("practice", "total", "central", "peripheral")
+  grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
+  subGrid2 <- grids[which(gridType == subGrid)]
   
   par(mar=c(0, 4, 0, 0) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
@@ -49,7 +53,7 @@ testStatus <- function (stimResponse,stimX, stimY,
   text(1,85, paste0("Manifest Refraction: ",details$MRx),pos=4,cex=2)
   text(1,80, paste0("Over-refraction: ",details$OR),pos=4,cex=2)
   text(1,75, paste0("Visual Acuity: ",details$VA),pos=4,cex=2)
-  text(1,70, "Grid Type: Polar V2",pos=4,cex=2)
+  text(1,70, paste0("Grid Type: Polar V2 ", subGrid2),pos=4,cex=2)
   text(1,65, paste("Stimulus Size: ",details$stimSizeRoman,sep=""),pos=4,cex=2)
 
   if (length(fp_counter) > 0){
@@ -133,6 +137,10 @@ testStatusFinal <- function (fp_counter,fn_counter,
                         respTime, terminate,
                         details, testLocationsResponse) {
   
+  gridType <- c("Practice", "Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
+  grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
+  subGrid <- grids[which(gridType == details$gridType)]
+  
   par(mar=c(0, 4, 0, 0) + 0.1)
   layout(matrix(c(1,rep(2,2)),1,3))
   plot(1,type="n",xlim=c(1,10),ylim=c(1,100),xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
@@ -141,7 +149,7 @@ testStatusFinal <- function (fp_counter,fn_counter,
   text(1,85, paste0("Manifest Refraction: ",details$MRx),pos=4,cex=2)
   text(1,80, paste0("Over-refraction: ",details$OR),pos=4,cex=2)
   text(1,75, paste0("Visual Acuity: ",details$VA),pos=4,cex=2)
-  text(1,70, "Grid Type: Polar V2",pos=4,cex=2)
+  text(1,70, paste0("Grid Type: Polar V2 ", subGrid),pos=4,cex=2)
   text(1,65, paste("Stimulus Size: ",details$stimSizeRoman,sep=""),pos=4,cex=2)
   
   if (length(fp_counter) > 0){

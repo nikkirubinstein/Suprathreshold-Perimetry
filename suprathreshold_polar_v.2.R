@@ -59,7 +59,7 @@ suprathreshold_PV2 <- function(
                            eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",
                            gazeFeed=0,
                            bigWheel=TRUE,
-                           resp_buzzer = 3)) {
+                           resp_buzzer = 3) {
   
   ##################################################################
   # get patient details
@@ -156,20 +156,21 @@ suprathreshold_PV2 <- function(
     
     # run screening procedure
     res <- procedureSuprathreshold(startTime = details$startTime, 
-                                    testIntensities = testIntensities, 
-                                    makeStim = makeStim,
-                                    details = details,
-                                    respWinBuffer=250,
-                                    FPLevel=55, 
-                                    FNDelta=10,
-                                    FNPause=300,
-                                    FNLocationThreshold=20,
-                                    FPSize=as.numeric(details$stimSize),
-                                    FNSize=as.numeric(details$stimSize),
-                                    moveProj = moveProjector,
-                                    minInterStimInt = minInterStimInterval,
-                                    maxInt = maxInt,
-                                    directory = directory)
+                                   testIntensities = testIntensities, 
+                                   makeStim = makeStim,
+                                   details = details,
+                                   respWinBuffer=250,
+                                   FPLevel=55, 
+                                   FNDelta=10,
+                                   FNPause=300,
+                                   FNLocationThreshold=20,
+                                   FPSize=as.numeric(details$stimSize),
+                                   FNSize=as.numeric(details$stimSize),
+                                   moveProj = moveProjector,
+                                   minInterStimInt = minInterStimInterval,
+                                   maxInt = maxInt,
+                                   directory = directory,
+                                   subGrid = subGrid)
     res1 <- combineOutput(res1, res)
     tkdestroy(tt) # destroy pause button
   }  

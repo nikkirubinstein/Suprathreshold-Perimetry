@@ -33,8 +33,9 @@
 #   respWinBuffer   - time added to mean of respWin to determine final response Window
 #   moveProj        - logical value indicating whether the nextStim should be defined for a stimulus presentation
 #   minInterStimInt - minimum interstimulus interval when using an adaptive method to find the interstimulus interval
-#   maxInt    - Maximum perimter brithgness 
-#   directory - Directory in which to store output files
+#   maxInt    - maximum perimter brithgness 
+#   directory - directory in which to store output files
+#   subGrid   - which portion of the grid is being tested (central, peripheral, total or practice)
 #
 # RETURNS:  ti is the data.frame of test intensities that was taken as an argument for this function
 #           tr is a data.frame of responses - x, y, stimulus responses (TRUE - seen, FALSE - not seen, NA - not presented) correspond to stimuli in ti, terminate (logical whether the location reached termination)
@@ -67,7 +68,8 @@ procedureSuprathreshold <- function(
   moveProj = T,
   minInterStimInt = 0, 
   maxInt = 4000, # maximum intensity - 4000 or 10000
-  directory = NULL # where should the file be saved?
+  directory = NULL, # where should the file be saved?
+  subGrid
   ) {
 
   # convert FP to cd
@@ -231,7 +233,7 @@ procedureSuprathreshold <- function(
 
             fp_counter <- c(fp_counter, min(1,result$seen))
             
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
       
            if (details$gridType != "Practice") {
               cat(file=file.path(directory, filename),
@@ -248,7 +250,7 @@ procedureSuprathreshold <- function(
           
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
             if (details$gridType != "Practice") {
               cat(file=file.path(directory,filename),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f\n Trial Time: %.0f\n", "FNCatch",cdTodb(result$stimulus$level,maxInt/pi), result$seen, result$time,difftime(Sys.time(),start_time,units = "secs") * 1000))
@@ -312,7 +314,7 @@ procedureSuprathreshold <- function(
         idx.testLocationsResponse <- which(!testLocationsResponse$terminated)
         finished_counter <- sum(testLocationsResponse$terminated)  
         
-        testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities)
+        testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
         
         
         if (length(idx.testLocationsResponse) == 1) {
@@ -322,7 +324,7 @@ procedureSuprathreshold <- function(
           interStimInt(respTime,minInterStimInt)#}
           
           if (details$gridType != "Practice") {
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
             cat(file=file.path(directory, filename),
               append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$stimulus$x,result$stimulus$y,cdTodb(result$stimulus$level, maxInt/pi), result$seen, result$time,difftime(Sys.time(),dummy_start_time,units = "secs") * 1000,"(Dummy Trial)"))
           }
@@ -338,7 +340,7 @@ procedureSuprathreshold <- function(
         index[1] <- index[2]
     }
     
-    testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=FALSE, details, testLocationsResponse, currentIntensities)
+    testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=FALSE, details, testLocationsResponse, currentIntensities, subGrid)
     terminate <- Sys.time()
     
     return(list(ti=testIntensities, tr=testLocationsResponse, n=apply(testLocationsResponse[,-(1:2)], 1, function(x) sum(!is.na(x)) - 1),fpc=fp_counter,fnc=fn_counter,rt=respTime, terminate=terminate))
