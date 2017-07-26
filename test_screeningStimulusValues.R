@@ -31,7 +31,13 @@ normativeData <- function(age = 85,    # age of subject
               subGrid = 'total'){      # sub grid - 'total', 'central', 'peripheral' or 'practice'
 
   # setwd( wd ) # set working directory to source file location
-  if((!'visualFields' %in% installed.packages()) | (installed.packages()[grep(pattern = 'visualFields', installed.packages()),]['Version'] != 0.5)){
+  if (!'visualFields' %in% installed.packages()) {
+      libraryCheck("spatstat") # this is the problem!!
+      libraryCheck("deldir")
+      libraryCheck("gtools")
+      install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
+  }
+  if (packageDescription("visualFields")$Version != 0.5){
     libraryCheck("spatstat") # this is the problem!!
     libraryCheck("deldir")
     libraryCheck("gtools")
