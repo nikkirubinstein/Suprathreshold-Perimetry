@@ -32,6 +32,7 @@ inputs <- function(){
     # rbValue2 <- tclVar(as.numeric(px_info$Stimulus_Size))
     rbValue3 <- tclVar(as.character(px_info$Eye))
     comboVal1 <- tclVar(as.character(px_info$VA))
+    comboVal2 <- tclVar("")
     # comboVal2 <- tclVar(as.character(px_info$Grid))
     
   } else {
@@ -44,7 +45,7 @@ inputs <- function(){
     # rbValue2 <- tclVar(0.43)
     rbValue3 <- tclVar ("right")
     comboVal1 <- tclVar("20/20")
-    # comboVal2 <- tclVar("Suprathreshold")
+    comboVal2 <- tclVar("")
   }
   
   VA <- c("20/10","20/12.5","20/16","20/20","20/25","20/32","20/40","20/50","20/63","20/80","20/100","20/125",
@@ -52,8 +53,9 @@ inputs <- function(){
   comboBox <- tkwidget(tt,"ComboBox",editable=FALSE,values=VA,textvariable=comboVal1)
   # gridType <- c("Peripheral","30-2","30-1","24-2","G1","P-Total","P-Central10","P-Central26","P-Peripheral","P-Edge")
   # gridType <- c("Suprathreshold", "Practice")
-  gridType <- "Suprathreshold_P-Total"
-  # comboBox2 <- tkwidget(tt,"ComboBox",editable=FALSE,values=gridType,textvariable=comboVal2)
+  gridType <- c("Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
+  # grids <- c('total', 'central', 'peripheral')
+  comboBox2 <- tkwidget(tt,"ComboBox",editable=FALSE,values=gridType,textvariable=comboVal2)
   
   rb4 <- tkradiobutton(tt)
   rb5 <- tkradiobutton(tt)
@@ -136,12 +138,16 @@ inputs <- function(){
       tkmessageBox(message = "Please enter a numeric value for the patient's age", icon = "warning", type = "ok")
     } else if (tclvalue(var3) == "") {
       tkmessageBox(message = "Please enter diagnosis", icon = "warning", type = "ok")
+    } else if (!length(gridType[as.numeric(tclvalue(tcl(comboBox2,"getvalue")))+1])) {
+      tkmessageBox(message = "Please enter test type", icon = "warning", type = "ok")
+    } else if (tclvalue(rbValue3) == "") {
+      tkmessageBox(message = "Please select a single eye", icon = "warning", type = "ok")
     } else {
       a <- tclvalue(var1)
       b <- tclvalue(var2)
       c <- tclvalue(var3)
       d <- tclvalue(var4)
-      e <- gridType
+      e <- gridType[as.numeric(tclvalue(tcl(comboBox2,"getvalue")))+1]
       # f1 <- tclvalue(rbValue2)
       g <- tclvalue(rbValue3)
       h <- as.logical(as.numeric(tclvalue(cb1Value)))
@@ -197,8 +203,8 @@ inputs <- function(){
   tkgrid(tklabel(tt,text="Additional\nComments"),entry4, pady = 10, padx =10)  
   tkgrid.configure(entry4,columnspan=7,sticky="new")
 
-  # tkgrid(tklabel(tt,text="Test Type  "),comboBox2,pady=10,padx=10)
-  # tkgrid.configure(comboBox2,columnspan=7,sticky="new")
+  tkgrid(tklabel(tt,text="Test Type  "),comboBox2,pady=10,padx=10)
+  tkgrid.configure(comboBox2,columnspan=7,sticky="new")
   # tkgrid(tklabel(tt,text="     Stimulus\n     Size"),tklabel(tt,text="III"),rb4,tklabel(tt,text="V"),rb5,tklabel(tt,text="VI"),rb6,pady=10,padx=10,sticky="w")
   eyeLab <- tklabel(tt,text="Eye  ")
   tkgrid(eyeLab,tklabel(tt,text="Right"),rb7,tklabel(tt,text="Left"),rb8,

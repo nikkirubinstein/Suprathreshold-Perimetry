@@ -59,8 +59,7 @@ suprathreshold_PV2 <- function(
                            eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/",
                            gazeFeed=0,
                            bigWheel=TRUE,
-                           resp_buzzer = 3,
-                           subGrids = c('central', 'peripheral')) {
+                           resp_buzzer = 3)) {
   
   ##################################################################
   # get patient details
@@ -79,7 +78,10 @@ suprathreshold_PV2 <- function(
       dir.create(directory, recursive = TRUE)
   }
   
-   
+  gridType <- c("Practice", "Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
+  grids <- list('practice', c('central', 'peripheral'), 'central', 'peripheral')
+  subGrids <- grids[[which(gridType == details$gridType)]]
+    
   ###################################################################
   # helper function used to make stimuli of class opiStaticStimulus  
   ###################################################################

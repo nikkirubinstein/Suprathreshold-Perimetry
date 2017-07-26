@@ -35,8 +35,7 @@ while (practice) {
     eyeSuiteSettingsLocation = "C:/ProgramData/Haag-Streit/EyeSuite/",
     gazeFeed = 0,
     bigWheel = TRUE,
-    resp_buzzer = 3,
-    subGrids = 'practice')
+    resp_buzzer = 3)
   
   practice <- res$practice
   if (practice){
@@ -53,8 +52,7 @@ res <- suprathreshold_PV2(
   eyeSuiteSettingsLocation = "C:/ProgramData/Haag-Streit/EyeSuite/",
   gazeFeed = 0,
   bigWheel = TRUE,
-  resp_buzzer = 3,
-  subGrids = c('central', 'peripheral'))
+  resp_buzzer = 3)
 
 graphics.off()
 

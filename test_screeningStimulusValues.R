@@ -23,7 +23,8 @@
 #   make into function normativeData, which takes two arguments: age and eye ('OD' or 'OS')
 #   visualFields_0.5.tar.gz and nvsapmw_pointwise.rda need to be stored in the same location as this file
 
-# wd <- dirname(parent.frame(2)$ofile) 
+# wd <- dirname(parent.frame(2)$ofile)
+source("libraryCheckFunction.R")
 normativeData <- function(age = 85,    # age of subject
               eye = "right",           # eye to be tested
               maxInt = 4000,           # maximum stimulus intensity of the perimeter
@@ -31,9 +32,9 @@ normativeData <- function(age = 85,    # age of subject
 
   # setwd( wd ) # set working directory to source file location
   if((!'visualFields' %in% installed.packages()) | (installed.packages()[grep(pattern = 'visualFields', installed.packages()),]['Version'] != 0.5)){
-    install.packages("spatstat")
-    install.packages("deldir")
-    install.packages("gtools")
+    libraryCheck("spatstat") # this is the problem!!
+    libraryCheck("deldir")
+    libraryCheck("gtools")
     install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
   }
   library( visualFields ) # to be used with visualFields 0.5, make sure this version is installed
