@@ -20,8 +20,11 @@
 #
 # modified by Nikki Rubinstein 1st June 2017
 #   comment out pdf creation
-#   make into function normativeData, which takes two arguments: age and eye ('OD' or 'OS')
+#   make into function normativeData, which takes four arguments: age and eye ('OD' or 'OS')
 #   visualFields_0.5.tar.gz and nvsapmw_pointwise.rda need to be stored in the same location as this file
+#
+# modified 2st August 2017
+#   to overcome difficulty with loading visual fields package, the saplocmap data.frame has been saved in a separate data file
 
 # wd <- dirname(parent.frame(2)$ofile)
 source("libraryCheckFunction.R")
@@ -31,21 +34,25 @@ normativeData <- function(age = 85,    # age of subject
               subGrid = 'total'){      # sub grid - 'total', 'central', 'peripheral' or 'practice'
 
   # setwd( wd ) # set working directory to source file location
-  if (!'visualFields' %in% installed.packages()) {
-      libraryCheck("spatstat") # this is the problem!!
-      libraryCheck("deldir")
-      libraryCheck("gtools")
-      install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
-  }
-  if (packageDescription("visualFields")$Version != 0.5){
-    libraryCheck("spatstat") # this is the problem!!
-    libraryCheck("deldir")
-    libraryCheck("gtools")
-    install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
-  }
-  library( visualFields ) # to be used with visualFields 0.5, make sure this version is installed
-  
-  load( "nvsapmw_pointwise.rda" ) # the pointwise normative values calculated from M Wall's dataset of healthy eyes
+  # if (!'visualFields' %in% installed.packages()) {
+  #     libraryCheck("spatstat") # this is the problem!!
+  #     libraryCheck("gtools")
+  #     install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
+  # }
+  # if (packageDescription("visualFields")$Version != 0.5){
+  #   remove.packages(c("visualFields", "spatstat", "gtools"))
+  #   print("visualFields, spatstat and gtools packages have been removed")
+  #   print("New versions of these packages will be installed next time normativeData() is called")
+  #   .rs.restartR()
+  #   # normativeData(age = age, eye = eye, maxInt = maxInt, subGrid = subGrid)
+  #   # libraryCheck("spatstat") # this is the problem!!
+  #   # libraryCheck("gtools")
+  #   # install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
+  # }
+  # library( visualFields ) # to be used with visualFields 0.5, make sure this version is installed
+ 
+  load("saplocmap.RData")
+  load("nvsapmw_pointwise.rda") # the pointwise normative values calculated from M Wall's dataset of healthy eyes
   
   # testing locations for the central PC26 and peripheral Peri locations from visualFields package
   locmapc <- saplocmap$pPC26v[,c(1,2)] # central test
