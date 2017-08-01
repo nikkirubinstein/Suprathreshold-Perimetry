@@ -23,7 +23,7 @@
 #   make into function normativeData, which takes four arguments: age and eye ('OD' or 'OS')
 #   visualFields_0.5.tar.gz and nvsapmw_pointwise.rda need to be stored in the same location as this file
 #
-# modified 2st August 2017
+# modified 1st August 2017
 #   to overcome difficulty with loading visual fields package, the saplocmap data.frame has been saved in a separate data file
 
 # wd <- dirname(parent.frame(2)$ofile)
@@ -51,7 +51,7 @@ normativeData <- function(age = 85,    # age of subject
   # }
   # library( visualFields ) # to be used with visualFields 0.5, make sure this version is installed
  
-  load("saplocmap.RData")
+  load("saplocmap.RData")       # taken from visualFields package version 0.5
   load("nvsapmw_pointwise.rda") # the pointwise normative values calculated from M Wall's dataset of healthy eyes
   
   # testing locations for the central PC26 and peripheral Peri locations from visualFields package
