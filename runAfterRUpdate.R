@@ -8,10 +8,11 @@
 wd <- dirname(parent.frame(2)$ofile)
 setwd(wd)
 load("Rpackages.RData")
-for (p in setdiff(packages, installed.packages()[,"Package"]))
+for (p in setdiff(packages, c(installed.packages()[,"Package"], "visualFields")))
   install.packages(p)
-if (!'visualFields' %in% installed.packages()) {
-  libraryCheck("spatstat") # this is the problem!!
-  libraryCheck("gtools")
-  install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
-}
+
+# install visualFields package
+source("libraryCheckFunction.R")
+libraryCheck("spatstat") 
+libraryCheck("gtools")
+install.packages("visualFields_0.5.tar.gz", repos = NULL, type="source")
