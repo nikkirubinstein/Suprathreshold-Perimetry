@@ -56,3 +56,4 @@ res <- suprathreshold_PV2(
 
 graphics.off()
 
+setwd("..")
