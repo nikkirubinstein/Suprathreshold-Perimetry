@@ -5,6 +5,9 @@
 # Modified from Luke Chong's code
 # Nikki Rubinstein
 # 24 July 2017
+#
+# Modified 9/8/17 - added voronoi function to create a Voronoi tessellation 
+#                   represenation of the visual field
 ##################################################################################
 
 source("libraryCheckFunction.R")
@@ -23,16 +26,29 @@ f <- function(m) { ## rotates image plot
 #     red, not seen at 1% - black
 # 
 # Inputs:
-#   testLocationsResponse
+#   testLocationsResponse - data.frame of x, y, stimulus reseponses 
+#                           (logicals) and terminated (whether 
+#                           location has termianted)
+#   details      - patient and grid details (created by inputs() 
+#                  function)
+#   showNumber   - logical (should numbers be plotted within Voronoi 
+#                  tiles)
+#   plotAxes     - logical (should axes be drawn on the plot)
+#   add          - logical (add to current plot or create new plot)
+#   cex.pnt      - expansion factor for numbers plotted on tiles (only 
+#                  applied if showNumber == TRUE)
+#   dist.pnt     - Euclidean distance of convex hull from test locations
+#   polygon.plot - logical (should a white polygon be plotted instead 
+#                  of Voronoi tiles)
 ################################################################################
 
-voronoi <- function(testLocationsResponse, subGrid, details, 
-                    showNumber, plotLegend, legendText, plotAxes){
-  
-  # 'Practice', 'Full Field', 'Central26', 'Peripheral'
-  # vtess <- deldir(normativeData()$x, normativeData()$y, z = sample(0:2, 128, replace = T), dpl = list(x = xAdd, y = yAdd))
-  # vtess <- deldir(normativeData(subGrid = "central")$x, normativeData(subGrid = "central")$y, z = sample(0:2, 64, replace = T), dpl = list(x = xAdd, y = yAdd))
-  # vtess <- deldir(normativeData(subGrid = "peripheral")$x, normativeData(subGrid = "peripheral")$y, z = sample(0:2, 64, replace = T), dpl = list(x = xAdd, y = yAdd))
+voronoi <- function(testLocationsResponse, details,
+                    showNumber = TRUE, 
+                    plotAxes = TRUE,
+                    add = FALSE, 
+                    cex.pnt = 1, 
+                    dist.pnt = 5, 
+                    polygon.plot = FALSE){
   
   ####################################################
   # extracts x, y coordinates from list of tiles and adds
@@ -67,11 +83,11 @@ voronoi <- function(testLocationsResponse, subGrid, details,
       if(is.na(z))
         return("")
       if(z == 0) 
-        return("0 to Nl")
+        return("N")
       if (z == 1)
-        return("<5%")
+        return("5")
       if (z == 2)
-        return("<1%")
+        return("1")
       return("")
       })
   }
@@ -89,23 +105,35 @@ voronoi <- function(testLocationsResponse, subGrid, details,
   }
   
   ####################################################
-  # peripheral plot
+  # Voronoi tesselation
   ####################################################
   
-  if (subGrid == "Peripheral" | subGrid == "Full Field"){
-    
-    nrowTLR <- nrow(testLocationsResponse)
-    vtess <- deldir(testLocationsResponse$x[(nrowTLR - 63): nrowTLR], 
-                    testLocationsResponse$y[(nrowTLR - 63): nrowTLR], 
-                    z = finalVal(testLocationsResponse)[(nrowTLR - 63): nrowTLR],
-                    dpl = list())
+  if (!polygon.plot){
+    vtess <- deldir(testLocationsResponse$x, 
+                    testLocationsResponse$y,
+                    z = finalVal(testLocationsResponse),
+                    dpl = list(x = ifelse(details$eye == "right", 15, -15), y = -2))
     vtessTL <- tile.list(vtess)
     z <- sapply(vtessTL, "[[", "z")
-    
-    outerEdges <- as.data.frame(t(sapply(vtessTL, edgePntFn)))
-    outerEdges <- outerEdges[chull(outerEdges),]
-    names(outerEdges) <- c('x', 'y')
-    
+  } else {
+    vtess <- deldir(testLocationsResponse$x, 
+                    testLocationsResponse$y)
+    vtessTL <- tile.list(vtess)
+  }
+  
+  ####################################################
+  # Convex hull
+  ####################################################
+  
+  outerEdges <- as.data.frame(t(sapply(vtessTL, edgePntFn, dist = dist.pnt)))
+  outerEdges <- outerEdges[chull(outerEdges),]
+  names(outerEdges) <- c('x', 'y')
+  
+  ####################################################
+  # set up plot
+  ####################################################
+  
+  if (!add){
     par(mar=c(4, 3, 4, 2) + 0.1)
     plot(x = c(min(outerEdges$x), 
                max(outerEdges$x)), 
@@ -113,13 +141,29 @@ voronoi <- function(testLocationsResponse, subGrid, details,
                max(outerEdges$y)), 
          xaxt = "n", yaxt = "n", 
          type = "n", bty = "n", xlab = "", ylab = "", las = 1, asp = 1)
-   
-    if (plotAxes){
-      axis(side = 1, at = seq(((min(outerEdges$x) %/% 20) + 1) * 20,
-                              (max(outerEdges$x) %/% 20) * 20, 20))
-      axis(side = 2, at = seq(((min(outerEdges$y) %/% 20) + 1) * 20,
-                              (max(outerEdges$y) %/% 20) * 20, 20), las = 1)
-    }
+  }
+    
+  ####################################################
+  # add axes
+  ####################################################
+  
+  if (plotAxes){  
+    axis(side = 1, 
+         at = seq(((min(outerEdges$x) %/% 20) + 1) * 20,
+                  (max(outerEdges$x) %/% 20) * 20, 20))
+    axis(side = 2, 
+         at = seq(((min(outerEdges$y) %/% 20) + 1) * 20,
+                  (max(outerEdges$y) %/% 20) * 20, 20), 
+         las = 1)
+  }
+  
+  ####################################################
+  # plot Voronoi tiles or polygon
+  ####################################################
+  
+  if (polygon.plot){
+    polygon(outerEdges, col = "white", border = "white")
+  } else {
     
     plot(vtessTL, close = TRUE, border = "white", 
          fillcol = fillcol(z), 
@@ -128,83 +172,11 @@ voronoi <- function(testLocationsResponse, subGrid, details,
     
     if (showNumber){
       points <- t(sapply(vtessTL, "[[", "pt"))
-      text(points[z == 0 | z == 1,], locLabel(z[z == 0 | z == 1]))
-      text(points[z == 2,], locLabel(z[z == 2]), col = "white")
+      if (sum(z == 0 | z == 1, na.rm = TRUE))
+        text(points[z == 0 | z == 1,], locLabel(z[z == 0 | z == 1]))
+      if (sum(z == 2, na.rm = TRUE))
+        text(points[z == 2,], locLabel(z[z == 2]), col = "white")
     }
-    
-    if (subGrid == "Peripheral"){
-      centralPnts <- normativeData(subGrid = "central")[,1:2]
-      centralPnts <- centralPnts[chull(centralPnts),]
-      polygon(centralPnts, col = "white", border = "white")
-    }
-  }
-  
-  if (subGrid != "Peripheral"){
-  # if (subGrid == "Central26" | subGrid == "Full Field"){
-    
-    # blind spot
-    yAdd <- -2
-    xAdd <- rep(ifelse(details$eye == "right", 15, -15), length(yAdd))
-    
-    vtess <- deldir(testLocationsResponse$x[1:64], 
-                    testLocationsResponse$y[1:64], 
-                    z = finalVal(testLocationsResponse)[1:64], 
-                    dpl = list(x = xAdd, y = yAdd))
-    vtessTL <- tile.list(vtess)
-    z <- sapply(vtessTL, "[[", "z")
-    
-    outerEdges <- as.data.frame(t(sapply(vtessTL, edgePntFn, dist = 3)))
-    outerEdges <- outerEdges[chull(outerEdges),]
-    names(outerEdges) <- c('x', 'y')
-    
-    if (subGrid != "Full Field"){
-    # if (subGrid == "Central26"){
-      par(mar=c(4, 3, 4, 2) + 0.1)
-      plot(x = c(min(outerEdges$x), 
-                 max(outerEdges$x)), 
-           y = c(min(outerEdges$y), 
-                 max(outerEdges$y)), 
-           xaxt = "n", yaxt = "n", 
-           type = "n", bty = "n", xlab = "", ylab = "", las = 1, asp = 1)
-      if (plotAxes){
-        axis(side = 1, at = seq(((min(outerEdges$x) %/% 20) + 1) * 20,
-                                (max(outerEdges$x) %/% 20) * 20, 20))
-        axis(side = 2, at = seq(((min(outerEdges$y) %/% 20) + 1) * 20,
-                                (max(outerEdges$y) %/% 20) * 20, 20), las = 1)
-      }
-    }
-    
-    plot(tile.list(vtess), close = TRUE, border = "white", 
-         fillcol = fillcol(z), showpoints = FALSE,
-         clipp = outerEdges, add = TRUE)
-    
-    if (showNumber){
-      points <- t(sapply(vtessTL, "[[", "pt"))
-      text(points[z == 0 | z == 1,], locLabel(z[z == 0 | z == 1]), cex = 0.8)
-      text(points[z == 2,], locLabel(z[z == 2]), col = "white", cex = 0.8)
-    }
-  }
-  
-  if (plotLegend)
-    z <- finalVal(testLocationsResponse)
-    if (legendText){
-    legend(x = "top", inset = -0.1, cex = 1.2,
-           xpd = NA, bty = "n",horiz = TRUE, xjust = 0.5,
-           legend = c(
-             paste0("5% seen\n(", sum(z == 0, na.rm = TRUE), ")"),
-             paste0("1% seen\n(", sum(z == 1, na.rm = TRUE), ")"),
-             paste0("1% not seen\n(", sum(z == 2, na.rm = TRUE), ")")),
-           fill = c("forestgreen", "red", "black", "blue")[1:3]#, x.intersp = 3.4, adj = 0.5
-    )
-    } else {
-      legend(x = "top", inset = -0.1, cex = 1.2,
-             xpd = NA, bty = "n",horiz = TRUE, xjust = 0.5,
-             legend = c(
-               sum(z == 0, na.rm = TRUE),
-               sum(z == 1, na.rm = TRUE),
-               sum(z == 2, na.rm = TRUE)),
-             fill = c("forestgreen", "red", "black", "blue")[1:3]#, x.intersp = 3.4, adj = 0.5
-      )
   }
 }
 
@@ -334,8 +306,7 @@ testStatusFinal <- function (fp_counter,fn_counter,
   subGrid <- grids[which(gridType == details$gridType)]
   
   ########################################################
-  ### play time
-  ### Playing with voronoi tessellation
+  # plot test details
   ########################################################
   
   par(mar=c(0, 4, 0, 0) + 0.1)
@@ -373,73 +344,52 @@ testStatusFinal <- function (fp_counter,fn_counter,
   timeStamp <- Sys.time()
   text(1,15 + 2.5,paste("Test Time:",format(.POSIXct(difftime(terminate,commence,units="secs") - timePaused),"%M:%S")),pos=4,cex=2)
   text(1,10 + 2.5,paste("% Complete: ",sum(testLocationsResponse$terminated),"/",nrow(testLocationsResponse)," (",round(sum(testLocationsResponse$terminated)/nrow(testLocationsResponse)*100),"%)",sep=""),pos=4,cex=2)
+  
   text(1,0.5  + 2.5,paste("Comments:", details$comments),pos=4,cex=2, xpd = NA)
   
-  voronoi(testLocationsResponse = testLocationsResponse, 
-          subGrid = subGrid, 
-          details = details, 
-          showNumber = TRUE, 
-          plotLegend = TRUE, 
-          legendText = FALSE, 
-          plotAxes = TRUE)
+  ########################################################
+  # plot Voronoi tessellation
+  ########################################################
+ 
+  if (subGrid == "Full Field" | subGrid == "Peripheral"){
+    voronoi(testLocationsResponse = testLocationsResponse[(nrow(testLocationsResponse) - 63): nrow(testLocationsResponse),], 
+            details = details)
+    if (subGrid == "Peripheral"){
+      voronoi(testLocationsResponse = 
+                normativeData(eye = details$eye, subGrid = "central"),
+        details = details,
+        showNumber = FALSE,
+        plotAxes = FALSE, 
+        add = TRUE,
+        dist.pnt = 0,
+        polygon.plot = TRUE)
+    } else {
+      voronoi(testLocationsResponse = testLocationsResponse[1:64,], 
+              details = details,
+              plotAxes = FALSE, 
+              add = TRUE,
+              dist.pnt = 3,
+              cex.pnt = 0.8)
+    }
+  } else {
+    voronoi(testLocationsResponse = testLocationsResponse,
+            details = details)
+  }
   
-  # # vtess <- deldir(c(testLocationsResponse$x, rep(ifelse(details$eye == "right", 15, -15), 2)), c(testLocationsResponse$y, -2, 2), z = c(finalVal(testLocationsResponse), "", ""))
-  # yAdd <- -2
-  # xAdd <- rep(ifelse(details$eye == "right", 15, -15), length(yAdd))
-  # if (subGrid == "Peripheral"){
-  #   pointsAdd <- normativeData(subGrid = "central")
-  #   yAdd <- c(yAdd, pointsAdd$y)
-  #   xAdd <- c(xAdd, pointsAdd$x)
-  # }
-  # 
-  # # vtess <- deldir(normativeData()$x, normativeData()$y, z = sample(0:2, 128, replace = T), dpl = list(x = xAdd, y = yAdd))
-  # # vtess <- deldir(normativeData(subGrid = "central")$x, normativeData(subGrid = "central")$y, z = sample(0:2, 64, replace = T), dpl = list(x = xAdd, y = yAdd))
-  # # vtess <- deldir(normativeData(subGrid = "peripheral")$x, normativeData(subGrid = "peripheral")$y, z = sample(0:2, 64, replace = T), dpl = list(x = xAdd, y = yAdd))
-  # vtess <- deldir(testLocationsResponse$x, testLocationsResponse$y, z = finalVal(testLocationsResponse), dpl = list(x = xAdd, y = yAdd))
-  # vtessTL <- tile.list(vtess)
-  # 
-  # edgePoints <- which(sapply(vtessTL, function(x) any(x$bp)))
-  # edgePntFn <- function(tile, dist = 5) {
-  #   x <- tile$pt['x']
-  #   y <- tile$pt['y']
-  #   len <- sqrt(x^2 + y^2) + dist
-  #   ang <- atan2(y, x)
-  #   return(list(x = len * cos(ang), y = len * sin(ang)))
-  # }
-  # outerEdges <- lapply(vtessTL[edgePoints], edgePntFn)
-  # outerEdges <- data.frame(x = sapply(outerEdges, "[[", "x"), y = sapply(outerEdges, "[[", "y"))
-  # outerEdges <- outerEdges[chull(outerEdges),]
-  # 
-  # fillcol <- function(z){
-  #   ifelse (z == "", "white",
-  #   ifelse (z == 0, "forestgreen",
-  #   ifelse (z == 1, "red",
-  #   ifelse (z == 2, "black",
-  #   "blue"))))
-  # }
-  # z <- sapply(vtessTL, "[[", "z")
-  # par(mar=c(4, 3, 4, 2) + 0.1)
-  # plot(x = c(min(outerEdges$x), 
-  #            max(outerEdges$x)), 
-  #      y = c(min(outerEdges$y), 
-  #            max(outerEdges$y)), 
-  #      xaxt = "n", yaxt = "n",
-  #      type = "n", bty = "n", xlab = "", ylab = "", las = 1, asp = 1)
-  # axis(side = 1, at = seq(((min(outerEdges$x) %/% 20) + 1) * 20,
-  #                         (max(outerEdges$x) %/% 20) * 20, 20))
-  # axis(side = 2, at = seq(((min(outerEdges$y) %/% 20) + 1) * 20,
-  #                         (max(outerEdges$y) %/% 20) * 20, 20), las = 1)
-  # plot(tile.list(vtess), close = TRUE, border = "white", 
-  #      fillcol = fillcol(z), 
-  #      pch = as.character(z), cex = 0.8,
-  #      clipp = outerEdges, add = T)
-  # legend(x = "top", inset = -0.1, cex = 1.2,
-  #        xpd = NA, bty = "n",horiz = TRUE, xjust = 0.5,
-  #        legend = c(
-  #          paste0("5% seen\n(", sum(z == 0, na.rm = TRUE), ")"),
-  #          paste0("1% seen\n(", sum(z == 1, na.rm = TRUE), ")"),
-  #          paste0("1% not seen\n(", sum(z == 2, na.rm = TRUE), ")")),
-  #        fill = c("forestgreen", "red", "black", "blue")[1:3]#, x.intersp = 3.4, adj = 0.5
-  #       )
+  ########################################################
+  # plot legend
+  ########################################################
+  
+  z <- finalVal(testLocationsResponse)
+  
+  legend(x = "top", inset = -0.1, cex = 1.2,
+         xpd = NA, bty = "n",horiz = TRUE, xjust = 0.5,
+         legend = c(
+           paste0("0 to Nl\n(", sum(z == 0, na.rm = TRUE), ")"),
+           paste0("<5%\n(", sum(z == 1, na.rm = TRUE), ")"),
+           paste0("<1%\n(", sum(z == 2, na.rm = TRUE), ")")),
+         fill = c("forestgreen", "red", "black", "blue")[1:3]
+  )
+  
 }
 
