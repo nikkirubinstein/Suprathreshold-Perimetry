@@ -61,6 +61,8 @@ suprathreshold_PV2 <- function(
                            bigWheel=TRUE,
                            resp_buzzer = 3) {
   
+  gRunning <<- TRUE
+  
   ##################################################################
   # get patient details
   ##################################################################
@@ -140,6 +142,9 @@ suprathreshold_PV2 <- function(
   res1 <- list()
   for (subGrid in subGrids){
     
+    # check that the test hasn't been terminated 
+    if (gRunning){
+
     ##################################################################
     # get test intensity values
     # capped at a minimum of 15 dB
@@ -173,6 +178,7 @@ suprathreshold_PV2 <- function(
                                    subGrid = subGrid)
     res1 <- combineOutput(res1, res)
     tkdestroy(tt) # destroy pause button
+    }
   }  
   # save results
   if(!practice & gRunning){
@@ -181,11 +187,11 @@ suprathreshold_PV2 <- function(
     # tkdestroy(tt) # destroy pause button
     testComplete()
     if (gRunning){
+      comments <- finalComments()
+      details$comments <- paste(details$comments,comments,sep=" ")
       pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
       with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
       dev.off()
-      comments <- finalComments()
-      details$comments <- paste(details$comments,comments,sep=" ")
       writeFile(directory, details, res1)
       writeFile2(directory, details, res1)
       writeFile3(directory, details, res1)

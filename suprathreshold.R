@@ -75,7 +75,6 @@ procedureSuprathreshold <- function(
   # convert FP to cd
   FPLevel <- dbTocd(FPLevel, maxInt/pi)
   commence <<- Sys.time()
-  gRunning <<- TRUE
   if (details$gridType != "Practice")
     filename <- paste0(details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt")
   
