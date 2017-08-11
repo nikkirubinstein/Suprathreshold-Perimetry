@@ -31,6 +31,7 @@ f <- function(m) { ## rotates image plot
 #                           location has termianted)
 #   details      - patient and grid details (created by inputs() 
 #                  function)
+#   finalVal     - function to determine final location status values
 #   showNumber   - logical (should numbers be plotted within Voronoi 
 #                  tiles)
 #   plotAxes     - logical (should axes be drawn on the plot)
@@ -42,7 +43,7 @@ f <- function(m) { ## rotates image plot
 #                  of Voronoi tiles)
 ################################################################################
 
-voronoi <- function(testLocationsResponse, details,
+voronoi <- function(testLocationsResponse, details, finalVal,
                     showNumber = TRUE, 
                     plotAxes = TRUE,
                     add = FALSE, 
@@ -61,17 +62,6 @@ voronoi <- function(testLocationsResponse, details,
     len <- sqrt(x^2 + y^2) + dist
     ang <- atan2(y, x)
     return(c(x = len * cos(ang), y = len * sin(ang)))
-  }
-  
-  ####################################################
-  # extract the number of unseen locations from 
-  # testLocationsResponse
-  ####################################################
-  
-  finalVal <- function(z) {
-    responses <- z[,-c(1,2,ncol(z))]
-    statTemp  <- apply(responses, 1, function(x) 
-      (sum(x * seq(length(x),1), na.rm = T)) - length(x)) * -1
   }
   
   ####################################################
@@ -295,11 +285,13 @@ testStatus <- function (stimResponse,stimX, stimY,
 #   terminate  - the time at which the test was completed
 #   details    - patient and grid details
 #   testLocationsResponse - data.frame of x, y, stimulus reseponses (logicals) and terminated (whether location has termianted)
+#   finalVal   - function to determine final status values of each of the tested locations
 ################################################################################
 
 testStatusFinal <- function (fp_counter,fn_counter,
                         respTime, terminate,
-                        details, testLocationsResponse) {
+                        details, testLocationsResponse, 
+                        finalVal) {
   
   gridType <- c("Practice", "Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
   grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
@@ -353,11 +345,13 @@ testStatusFinal <- function (fp_counter,fn_counter,
  
   if (subGrid == "Full Field" | subGrid == "Peripheral"){
     voronoi(testLocationsResponse = testLocationsResponse[(nrow(testLocationsResponse) - 63): nrow(testLocationsResponse),], 
-            details = details)
+            details = details, 
+            finalVal = finalVal)
     if (subGrid == "Peripheral"){
       voronoi(testLocationsResponse = 
                 normativeData(eye = details$eye, subGrid = "central"),
-        details = details,
+        details = details, 
+        finalVal = finalVal,
         showNumber = FALSE,
         plotAxes = FALSE, 
         add = TRUE,
@@ -365,7 +359,8 @@ testStatusFinal <- function (fp_counter,fn_counter,
         polygon.plot = TRUE)
     } else {
       voronoi(testLocationsResponse = testLocationsResponse[1:64,], 
-              details = details,
+              details = details, 
+              finalVal = finalVal, 
               plotAxes = FALSE, 
               add = TRUE,
               dist.pnt = 3,
@@ -373,7 +368,7 @@ testStatusFinal <- function (fp_counter,fn_counter,
     }
   } else {
     voronoi(testLocationsResponse = testLocationsResponse,
-            details = details)
+            details = details, finalVal = finalVal)
   }
   
   ########################################################

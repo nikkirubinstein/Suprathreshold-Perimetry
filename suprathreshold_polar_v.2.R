@@ -97,7 +97,63 @@ suprathreshold_PV2 <- function(
       class(s) <- "opiStaticStimulus"
       return(s)
     }
-          
+  
+  ###################################################################
+  # helper function used to determine next stimulus intensity to be
+  # tested  
+  # Input:  
+  #     int  - testIntensitites
+  #     resp - testLocationsResponse
+  #     loc  - which location was tested
+  # Output: 
+  #     db    - next test intensity
+  #     index - column index of test intensity in int and resp data 
+  #             frames    
+  ###################################################################
+  nextStimdb <- function(int, resp, loc){
+    # index <- which(is.na(resp[loc,]))[1]
+    index <- which(is.na(resp[loc,]))[1]
+    if (is.na(index))
+      index <- which(resp[loc,] == TRUE)[1] - 1
+    db <- int[loc, index]
+    list(index = index, db = db)
+  }
+  
+  ###################################################################
+  # helper function used to update testLocationsResponse
+  # Input:  
+  #     resp  - testLocationsResponse
+  #     loc   - which location was tested
+  #     index - column index of test intensity in resp data frame
+  #     seen  - was the stimulus detected?
+  #     
+  # Output: 
+  #     resp - testLocationsResponse
+  ###################################################################
+  stimUpdate <- function(resp, loc, dbIndex, seen){
+    # resp$terminated[loc] <- (seen | dbIndex == (ncol(resp) - 1))
+    resp$terminated[loc] <- ((seen & dbIndex == 3) |  # first location seen
+                               (!seen & dbIndex == (ncol(resp) - 1)) |    # second location not seen
+                               (dbIndex == 3 & !is.na(resp[loc, dbIndex + 1])))   # first location tested after second location tested
+    resp[loc, dbIndex] <- seen
+    return(resp)
+  }
+
+  ###################################################################
+  # helper function used to determine final location status values
+  # Input:  
+  #     resp  - testLocationsResponse
+  #     
+  # Output: 
+  #     vector of location statuses - 0 (5% seen), 1 (1% seen), 2 (1% not seen)
+  ###################################################################
+  
+  finalVal <- function(resp) {
+    responses <- resp[,-c(1,2,ncol(resp))]
+    apply(responses, 1, function(x) 
+      (max(x * seq(length(x),1), na.rm = T)) - length(x)) * -1
+  }
+  
     ###################################################################
     # helper function used to combine results from two separate calls
     # to procedureSuprathreshold() 
@@ -163,6 +219,8 @@ suprathreshold_PV2 <- function(
     res <- procedureSuprathreshold(startTime = details$startTime, 
                                    testIntensities = testIntensities, 
                                    makeStim = makeStim,
+                                   nextStimdb = nextStimdb, 
+                                   stimUpdate = stimUpdate,
                                    details = details,
                                    respWinBuffer=250,
                                    FPLevel=55, 
@@ -183,18 +241,18 @@ suprathreshold_PV2 <- function(
   # save results
   if(!practice & gRunning){
     windows(900,350)
-    with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
+    with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr, finalVal))
     # tkdestroy(tt) # destroy pause button
     testComplete()
     if (gRunning){
       comments <- finalComments()
       details$comments <- paste(details$comments,comments,sep=" ")
       pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
-      with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr))
+      with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr, finalVal))
       dev.off()
-      writeFile(directory, details, res1)
-      writeFile2(directory, details, res1)
-      writeFile3(directory, details, res1)
+      writeFile(directory, details, res1, finalVal)
+      writeFile2(directory, details, res1, finalVal)
+      writeFile3(directory, details, res1, finalVal)
       px_database(details)
     }
       

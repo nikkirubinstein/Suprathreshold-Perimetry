@@ -17,6 +17,8 @@
 #   startTime       - the time at which the test began
 #   testIntensities - a data.frame with columns x, y and stimulus intensities - each location is a single row
 #   makeStim - function to create a static stimulus of class "opiStaticStimulus"
+#   nextStimdb - function to determine the column index and dB value of the next stimulus for a given location
+#   stimUpdate - function to update testLocationsResponse after a presentation
 #   details  - a list of patient and grid details with elements: name, age, dx, MRx, OR, VA, comments, gridType, stimSizeRoman, eye, startTime, date and stimSize
 #   catchTrialLoadFreq - Frequency of catch trials in the first minute. Usually more frequent in order to front load.
 #   catchTrialFreq - Frequency of catch trials for the remainder of the test
@@ -53,6 +55,8 @@ procedureSuprathreshold <- function(
   startTime,
   testIntensities, 
   makeStim, 
+  nextStimdb,
+  stimUpdate,
   details,
   catchTrialLoadFreq=6,
   catchTrialFreq=20,
@@ -146,19 +150,21 @@ procedureSuprathreshold <- function(
     ####################################################################
     applyUndos <- function () {
       myEnv <- parent.env(environment())
-      
+      # if (gUndos > 0) browser()
       while ((gUndos > 0) & (length(locsPresented) >= gUndos)){
         loc <- locsPresented[length(locsPresented)]
         if (testLocationsResponse$terminated[loc]){
           print('removing a terminated location')
-          myEnv$testLocationsResponse$terminated <- FALSE
+          myEnv$testLocationsResponse$terminated[loc] <- FALSE
           myEnv$finished_counter <- finished_counter - 1
           myEnv$idx.testLocationsResponse <- which(!testLocationsResponse$terminated)
         } else {
           print('removing an unterminated location')
         }
+        # browser()
+        numPres <- sum(locsPresented == loc)
         myEnv$locsPresented <- locsPresented[-length(locsPresented)]
-        idx.stim <- which(!is.na(testLocationsResponse[loc, -(1:2)]))[1]
+        idx.stim <- ((numPres - 1) %% (ncol(testIntensities) - 2)) + 1
         myEnv$testLocationsResponse[loc, 2 + idx.stim] <- NA
         myEnv$currentIntensities[loc] <- testIntensities[loc, 2 + idx.stim]
         gUndos <<- gUndos - 1
@@ -167,6 +173,7 @@ procedureSuprathreshold <- function(
           cat(file=file.path(directory, filename),
               append=TRUE,paste("Presentation at location x =",testIntensities[loc, 'x'],"y =",testIntensities[loc, 'y'],"was deleted\n",sep=" "))
         }
+        # browser()
       }
       
    
@@ -216,6 +223,7 @@ procedureSuprathreshold <- function(
     # loop while still some unterminated locations
     ####################################################################
     while (length(idx.testLocationsResponse) > 0 && gRunning) {
+    # browser()
         start_time <- Sys.time()
         applyUndos() 
       
@@ -274,13 +282,18 @@ procedureSuprathreshold <- function(
      
         respWinCurrent <- respWinBuffer + mean(respWin)
         
-        if (is.null(testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]))
-          next
+        # if (is.null(testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]])){
+        #   browser()
+        #   next
+        # }
+        db <- nextStimdb(testIntensities, testLocationsResponse, index[1])
+        if (is.na(db$index))
+          browser()
         stim <- makeStim(x = testIntensities$x[index[1]],
                          y = testIntensities$y[index[1]], 
                          stimSize = details$stimSize, 
                          responseWindow = round(respWinCurrent), 
-                         db = testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]])
+                         db = db$db)
         if (length(idx.testLocationsResponse) > 1 && moveProj == TRUE) {
           params <- list(stim = stim, nextStim = makeStim(x = testIntensities$x[index[2]],
                                y = testIntensities$y[index[2]], 
@@ -297,24 +310,23 @@ procedureSuprathreshold <- function(
           if (details$gridType != "Practice") {
             cat(file=file.path(directory, filename),
                 append=TRUE, sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f\n", testIntensities$x[index[1]], testIntensities$y[index[1]], 
-                                     round(testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]), result$seen, result$time,difftime(Sys.time(),start_time,units = "secs") * 1000))
+                                     db$db, result$seen, result$time,difftime(Sys.time(),start_time,units = "secs") * 1000))
           }
           
-        if (result$seen){
-          testLocationsResponse[index[1], which(is.na(testLocationsResponse[index[1],]))[1]] <- TRUE
-          testLocationsResponse[index[1], 'terminated'] <- TRUE
-        }  else {
-          testLocationsResponse[index[1], which(is.na(testLocationsResponse[index[1],]))[1]] <- FALSE
-          if (any(is.na(testLocationsResponse[index[1],])))
-            currentIntensities[index[1]] <- testIntensities[index[1], which(is.na(testLocationsResponse[index[1],]))[1]]
-          else
-            testLocationsResponse[index[1], 'terminated'] <- TRUE
-        }
+          testLocationsResponse <- stimUpdate(testLocationsResponse, index[1], db$index, result$seen)
+          if (!testLocationsResponse$terminated[index[1]]){
+            currentIntensities[index[1]] <- testIntensities[index[1], ((db$index - ncol(testIntensities - 2)) %% 2) + 3]
+          }
+
         idx.testLocationsResponse <- which(!testLocationsResponse$terminated)
         finished_counter <- sum(testLocationsResponse$terminated)  
         
         testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
         
+        if (result$seen) {
+          respWin <- c(result$time,respWin[-5])
+          respTime <- c(result$time,respTime)
+        }
         
         if (length(idx.testLocationsResponse) == 1) {
           dummy_start_time <- Sys.time()
@@ -327,18 +339,21 @@ procedureSuprathreshold <- function(
             cat(file=file.path(directory, filename),
               append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$stimulus$x,result$stimulus$y,cdTodb(result$stimulus$level, maxInt/pi), result$seen, result$time,difftime(Sys.time(),dummy_start_time,units = "secs") * 1000,"(Dummy Trial)"))
           }
+          
+          if (result$seen) {
+            respWin <- c(result$time,respWin[-5])
+            respTime <- c(result$time,respTime)
+          }
         }
         
-        if (result$seen) {
-          respWin <- c(result$time,respWin[-5])
-          respTime <- c(result$time,respTime)
-        }
+ 
 
         # if (all(testLocationsResponse$terminated))
           # finished_counter <- finished_counter + 1
         index[1] <- index[2]
     }
     
+    # browser()
     testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=FALSE, details, testLocationsResponse, currentIntensities, subGrid)
     terminate <- Sys.time()
     

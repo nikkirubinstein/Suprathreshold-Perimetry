@@ -12,14 +12,14 @@
 
 # function to find locations' statuses (status is the number of stimuli that were not seen)
 # argument is testLocationsResponses
-finalVal <- function(z){
-  responses <- z[,-c(1,2,ncol(z))]
-  apply(responses, 1, function(x) (sum(x * seq(length(x),1), na.rm = T)) - length(x)) * -1
-}
+# finalVal <- function(z){
+#   responses <- z[,-c(1,2,ncol(z))]
+#   apply(responses, 1, function(x) (sum(x * seq(length(x),1), na.rm = T)) - length(x)) * -1
+# }
 
 # function to expand grid of locations' statuses (status is the number of stimuli that were not seen)
 # argument is testLocationResponses
-expandVal <- function(z){
+expandVal <- function(z, finalVal){
   df <- data.frame(x = z$x, y = z$y, val = finalVal(z))
   t(as.matrix(spread(df, x, val))[,-1])
 }
@@ -32,7 +32,7 @@ expandVal <- function(z){
 # filename        - name of the output file
 #
 ######################################################################
-writeFile <- function (directory, details, res){
+writeFile <- function (directory, details, res, finalVal){
   
   filename <- file.path(directory,paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".csv"))
   px_info <- data.frame(stringsAsFactors=FALSE)
@@ -57,7 +57,7 @@ writeFile <- function (directory, details, res){
   cat(paste("#FN errors: ",sum(res$fn_counter,na.rm=TRUE),"/",length(res$fn_counter)," (",signif(sum(res$fn_counter,na.rm=TRUE)/length(res$fn_counter)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
  
   cat("\n#Location status (number of stimuli not seen)\n", file=filename, append=TRUE)
-  write.table(expandVal(res$tr), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
+  write.table(expandVal(res$tr, finalVal), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
   cat("\n", file=filename, append=TRUE)
 }
 
@@ -67,7 +67,7 @@ writeFile <- function (directory, details, res){
 # 
 #
 ##########################################################################################################################
-writeFile2 <- function (directory,details,res){
+writeFile2 <- function (directory,details,res, finalVal){
   filename <- file.path(directory, paste0(details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,".csv"))
   
   #################################################################################
@@ -117,7 +117,7 @@ writeFile2 <- function (directory,details,res){
 # package and creates printout using visualFields package
 #
 ###########################################################################################
-writeFile3 <- function (directory,details,res){
+writeFile3 <- function (directory,details,res,finalVal){
   filename <- file.path(directory, paste0(details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")) 
 
   pattern <- "pPTv"  
