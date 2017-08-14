@@ -247,14 +247,14 @@ suprathreshold_PV2 <- function(
   # save results
   if(!practice & gRunning){
     windows(900,350)
-    with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal))
+    with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal, sum(n, na.rm = TRUE)))
     # tkdestroy(tt) # destroy pause button
     testComplete()
     if (gRunning){
       comments <- finalComments()
       details$comments <- paste(details$comments,comments,sep=" ")
       pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
-      with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal))
+      with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal, sum(n, na.rm = TRUE)))
       dev.off()
       writeFile(directory, details, res1, finalVal)
       writeFile2(directory, details, res1, finalVal)

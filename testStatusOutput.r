@@ -193,7 +193,7 @@ testStatus <- function (stimResponse,stimX, stimY,
                         respTime,plotStimResponse=TRUE,
                         details, testLocationsResponse, 
                         currentIntensities,
-                        subGrid, commence) {
+                        subGrid, commence, numPres) {
   
   gridType <- c("practice", "total", "central", "peripheral")
   grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
@@ -234,7 +234,7 @@ testStatus <- function (stimResponse,stimX, stimY,
     text(1,30,"Response Time SD: NA",pos=4,cex=2)
   }
   
-  text(1,20,paste("Presentations: ",sum(!is.na(testLocationsResponse[,-c(1:2,ncol(testLocationsResponse))])),sep=""),pos=4,cex=2)
+  text(1,20,paste("Presentations: ",numPres,sep=""),pos=4,cex=2)
   timeStamp <- Sys.time()
   text(1,15,paste("Test Time:",format(.POSIXct(difftime(timeStamp,commence,units="secs") - timePaused),"%M:%S")),pos=4,cex=2)
   text(1,10,paste("% Complete: ",sum(testLocationsResponse$terminated),"/",nrow(testLocationsResponse)," (",round(sum(testLocationsResponse$terminated)/nrow(testLocationsResponse)*100),"%)",sep=""),pos=4,cex=2)
@@ -291,7 +291,7 @@ testStatus <- function (stimResponse,stimX, stimY,
 testStatusFinal <- function (fp_counter,fn_counter,
                         respTime, testTime,
                         details, testLocationsResponse, 
-                        finalVal) {
+                        finalVal, numPres) {
   
   gridType <- c("Practice", "Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
   grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
@@ -332,7 +332,7 @@ testStatusFinal <- function (fp_counter,fn_counter,
     text(1,30 + 2.5,paste("Response Time SD:",round(sd(respTime)),"ms",sep=" "),pos=4,cex=2)
   } 
   
-  text(1,20 + 2.5,paste("Presentations: ",sum(!is.na(testLocationsResponse[,-c(1:2,ncol(testLocationsResponse))])),sep=""),pos=4,cex=2)
+  text(1,20 + 2.5,paste("Presentations: ",numPres,sep=""),pos=4,cex=2)
   timeStamp <- Sys.time()
   text(1,15 + 2.5,paste("Test Time:",format(.POSIXct(testTime),"%M:%S")),pos=4,cex=2)
   text(1,10 + 2.5,paste("% Complete: ",sum(testLocationsResponse$terminated),"/",nrow(testLocationsResponse)," (",round(sum(testLocationsResponse$terminated)/nrow(testLocationsResponse)*100),"%)",sep=""),pos=4,cex=2)

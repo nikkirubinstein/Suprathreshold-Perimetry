@@ -21,7 +21,7 @@
 # argument is testLocationResponses
 expandVal <- function(z, finalVal){
   df <- data.frame(x = z$x, y = z$y, val = finalVal(z))
-  t(as.matrix(spread(df, x, val))[,-1])
+  as.matrix(spread(df, x, val))[,-1]
 }
 
 ######################################################################
