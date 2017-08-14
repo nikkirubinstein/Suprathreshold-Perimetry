@@ -10,9 +10,9 @@ source("libraryCheckFunction.R")
 libraryCheck("tcltk")
 libraryCheck("OPI")
 
-timePaused <- 0
-mistakes <- 0
-deletes <- 0
+# timePaused <- 0
+# mistakes <- 0
+# deletes <- 0
 
 mywait <- function() {
   tt <- tktoplevel()

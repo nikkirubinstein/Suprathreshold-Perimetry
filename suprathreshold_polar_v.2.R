@@ -61,7 +61,12 @@ suprathreshold_PV2 <- function(
                            bigWheel=TRUE,
                            resp_buzzer = 3) {
   
+  ##################################################################
+  # initialise global variables for tcltk package
+  ##################################################################
   gRunning <<- TRUE
+  mistakes <<- 0
+  deletes <<- 0
   
   ##################################################################
   # get patient details
@@ -98,23 +103,22 @@ suprathreshold_PV2 <- function(
       return(s)
     }
   
+  
+  
   ###################################################################
   # helper function used to determine next stimulus intensity to be
   # tested  
   # Input:  
   #     int  - testIntensitites
-  #     resp - testLocationsResponse
   #     loc  - which location was tested
+  #     numPres - presentation number at location loc 
   # Output: 
   #     db    - next test intensity
   #     index - column index of test intensity in int and resp data 
   #             frames    
   ###################################################################
-  nextStimdb <- function(int, resp, loc){
-    # index <- which(is.na(resp[loc,]))[1]
-    index <- which(is.na(resp[loc,]))[1]
-    if (is.na(index))
-      index <- which(resp[loc,] == TRUE)[1] - 1
+  nextStimdb <- function(int, loc, numPres){
+    index <- ((numPres - 1) %% (ncol(int) - 2)) + 3
     db <- int[loc, index]
     list(index = index, db = db)
   }
@@ -161,16 +165,15 @@ suprathreshold_PV2 <- function(
     combineOutput <- function (r1, r2){
       if (!length(r1)){
         return(r2)}
-      mapply(function(x, y){ 
-        # browser()
+      result <- mapply(function(x, y){ 
         if (typeof(y) == "list"){
           rbind(x, y)
-        } else if (length(y) == 1){
-          y
         } else {
           c(x, y)
         }
       }, r1, r2, SIMPLIFY = FALSE)
+      names(result) <- names(r2)
+      return(result)
     }
 
     
@@ -234,25 +237,28 @@ suprathreshold_PV2 <- function(
                                    maxInt = maxInt,
                                    directory = directory,
                                    subGrid = subGrid)
+    
+    # print(cbind(res$tr, res$n))
     res1 <- combineOutput(res1, res)
+    # browser()
     tkdestroy(tt) # destroy pause button
     }
   }  
   # save results
   if(!practice & gRunning){
     windows(900,350)
-    with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr, finalVal))
+    with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal))
     # tkdestroy(tt) # destroy pause button
     testComplete()
     if (gRunning){
       comments <- finalComments()
       details$comments <- paste(details$comments,comments,sep=" ")
       pdf(file = file.path(directory, paste0(details$name,"_",details$dx,"_",details$gridType,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,".pdf")),width=14,height=6)
-      with(res1, testStatusFinal(fpc, fnc, rt, terminate, details, tr, finalVal))
+      with(res1, testStatusFinal(fpc, fnc, rt, sum(testTime), details, tr, finalVal))
       dev.off()
       writeFile(directory, details, res1, finalVal)
       writeFile2(directory, details, res1, finalVal)
-      writeFile3(directory, details, res1, finalVal)
+      writeFile3(directory, details, res1, finalVal, details$gridType)
       px_database(details)
     }
       

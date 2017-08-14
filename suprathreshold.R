@@ -78,7 +78,6 @@ procedureSuprathreshold <- function(
 
   # convert FP to cd
   FPLevel <- dbTocd(FPLevel, maxInt/pi)
-  commence <<- Sys.time()
   if (details$gridType != "Practice")
     filename <- paste0(details$name,"_",details$dx,"_",details$grid,"_",details$stimSizeRoman,"_",details$eye,"Eye_",details$date,"_",details$startTime,"_stimResponses.txt")
   
@@ -164,9 +163,9 @@ procedureSuprathreshold <- function(
         # browser()
         numPres <- sum(locsPresented == loc)
         myEnv$locsPresented <- locsPresented[-length(locsPresented)]
-        idx.stim <- ((numPres - 1) %% (ncol(testIntensities) - 2)) + 1
-        myEnv$testLocationsResponse[loc, 2 + idx.stim] <- NA
-        myEnv$currentIntensities[loc] <- testIntensities[loc, 2 + idx.stim]
+        idx.stim <- nextStimdb(testIntensities, loc, numPres)$index
+        myEnv$testLocationsResponse[loc, idx.stim] <- NA
+        myEnv$currentIntensities[loc] <- testIntensities[loc, idx.stim]
         gUndos <<- gUndos - 1
         
         if (details$gridType != "Practice") {
@@ -216,8 +215,14 @@ procedureSuprathreshold <- function(
     finished_counter <- 0 # number of terminated locations
     counter <- 1          # number of presentations
     locsPresented <- NULL # vector of locations presented in order
-    gUndos <<- 0
     index <- sample(idx.testLocationsResponse, 2) # choose random location to test first
+    commence <- Sys.time()
+    
+    ##################################################################
+    # initialise global variables for tcltk package
+    ##################################################################
+    gUndos <<- 0
+    timePaused <<- 0
     
     ####################################################################
     # loop while still some unterminated locations
@@ -240,7 +245,7 @@ procedureSuprathreshold <- function(
 
             fp_counter <- c(fp_counter, min(1,result$seen))
             
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid, commence)
       
            if (details$gridType != "Practice") {
               cat(file=file.path(directory, filename),
@@ -257,7 +262,7 @@ procedureSuprathreshold <- function(
           
           Sys.sleep(FNPause/1000)
             fn_counter <- c(fn_counter, result$seen == FALSE)
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid, commence)
             if (details$gridType != "Practice") {
               cat(file=file.path(directory,filename),
                 append=TRUE,sprintf("Location: %5s Stim: %2g dB Seen: %5s Resp Time: %5.2f\n Trial Time: %.0f\n", "FNCatch",cdTodb(result$stimulus$level,maxInt/pi), result$seen, result$time,difftime(Sys.time(),start_time,units = "secs") * 1000))
@@ -286,7 +291,7 @@ procedureSuprathreshold <- function(
         #   browser()
         #   next
         # }
-        db <- nextStimdb(testIntensities, testLocationsResponse, index[1])
+        db <- nextStimdb(testIntensities, index[1], sum(locsPresented == index[1]))
         if (is.na(db$index))
           browser()
         stim <- makeStim(x = testIntensities$x[index[1]],
@@ -321,7 +326,7 @@ procedureSuprathreshold <- function(
         idx.testLocationsResponse <- which(!testLocationsResponse$terminated)
         finished_counter <- sum(testLocationsResponse$terminated)  
         
-        testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
+        testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid, commence)
         
         if (result$seen) {
           respWin <- c(result$time,respWin[-5])
@@ -335,7 +340,7 @@ procedureSuprathreshold <- function(
           interStimInt(respTime,minInterStimInt)#}
           
           if (details$gridType != "Practice") {
-            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid)
+            testStatus(result$seen,result$stimulus$x, result$stimulus$y, finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=TRUE, details, testLocationsResponse, currentIntensities, subGrid, commence)
             cat(file=file.path(directory, filename),
               append=TRUE,sprintf("Location: x=%3g, y=%3g Stim: %2g dB Seen: %5s Resp Time: %5.2f Trial Time: %.0f %5s\n",result$stimulus$x,result$stimulus$y,cdTodb(result$stimulus$level, maxInt/pi), result$seen, result$time,difftime(Sys.time(),dummy_start_time,units = "secs") * 1000,"(Dummy Trial)"))
           }
@@ -354,8 +359,8 @@ procedureSuprathreshold <- function(
     }
     
     # browser()
-    testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=FALSE, details, testLocationsResponse, currentIntensities, subGrid)
+    testStatus(result$seen,testIntensities$x[index[1]], testIntensities$y[index[1]], finished_counter, fp_counter,fn_counter,respTime,plotStimResponse=FALSE, details, testLocationsResponse, currentIntensities, subGrid, commence)
     terminate <- Sys.time()
     
-    return(list(ti=testIntensities, tr=testLocationsResponse, n=apply(testLocationsResponse[,-(1:2)], 1, function(x) sum(!is.na(x)) - 1),fpc=fp_counter,fnc=fn_counter,rt=respTime, terminate=terminate))
+    return(list(ti=testIntensities, tr=testLocationsResponse, n=sapply(1:nrow(testIntensities), function(x)sum(locsPresented == x)),fpc=fp_counter,fnc=fn_counter,rt=respTime, testTime=difftime(terminate,commence,units="secs") - timePaused, tp = timePaused))
 }

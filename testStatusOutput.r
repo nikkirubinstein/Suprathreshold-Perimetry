@@ -193,7 +193,7 @@ testStatus <- function (stimResponse,stimX, stimY,
                         respTime,plotStimResponse=TRUE,
                         details, testLocationsResponse, 
                         currentIntensities,
-                        subGrid) {
+                        subGrid, commence) {
   
   gridType <- c("practice", "total", "central", "peripheral")
   grids <- c('Practice', 'Full Field', 'Central26', 'Peripheral')
@@ -282,14 +282,14 @@ testStatus <- function (stimResponse,stimX, stimY,
 #   fp_counter - false positive counter
 #   fn_counter - false negative counter
 #   respTime   - vector of response times
-#   terminate  - the time at which the test was completed
+#   testTime   - test duration
 #   details    - patient and grid details
 #   testLocationsResponse - data.frame of x, y, stimulus reseponses (logicals) and terminated (whether location has termianted)
 #   finalVal   - function to determine final status values of each of the tested locations
 ################################################################################
 
 testStatusFinal <- function (fp_counter,fn_counter,
-                        respTime, terminate,
+                        respTime, testTime,
                         details, testLocationsResponse, 
                         finalVal) {
   
@@ -334,7 +334,7 @@ testStatusFinal <- function (fp_counter,fn_counter,
   
   text(1,20 + 2.5,paste("Presentations: ",sum(!is.na(testLocationsResponse[,-c(1:2,ncol(testLocationsResponse))])),sep=""),pos=4,cex=2)
   timeStamp <- Sys.time()
-  text(1,15 + 2.5,paste("Test Time:",format(.POSIXct(difftime(terminate,commence,units="secs") - timePaused),"%M:%S")),pos=4,cex=2)
+  text(1,15 + 2.5,paste("Test Time:",format(.POSIXct(testTime),"%M:%S")),pos=4,cex=2)
   text(1,10 + 2.5,paste("% Complete: ",sum(testLocationsResponse$terminated),"/",nrow(testLocationsResponse)," (",round(sum(testLocationsResponse$terminated)/nrow(testLocationsResponse)*100),"%)",sep=""),pos=4,cex=2)
   
   text(1,0.5  + 2.5,paste("Comments:", details$comments),pos=4,cex=2, xpd = NA)

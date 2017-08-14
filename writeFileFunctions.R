@@ -51,10 +51,10 @@ writeFile <- function (directory, details, res, finalVal){
   #
   #########################################################################
   
-  cat(paste("#Test Duration: ",format(.POSIXct(difftime(res$terminate,commence,units="secs") - timePaused),"%M:%S"),sep=""),"\n",file=filename,append=TRUE)
-  cat(paste("#Total Presentations: ", sum(res$np,na.rm=TRUE),sep=""),"\n",file=filename,append=TRUE)
-  cat(paste("#FP errors: ",sum(res$fp_counter,na.rm=TRUE),"/",length(res$fp_counter)," (",signif(sum(res$fp_counter,na.rm=TRUE)/length(res$fp_counter)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
-  cat(paste("#FN errors: ",sum(res$fn_counter,na.rm=TRUE),"/",length(res$fn_counter)," (",signif(sum(res$fn_counter,na.rm=TRUE)/length(res$fn_counter)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
+  cat(paste("#Test Duration: ",format(.POSIXct(sum(res$testTime)),"%M:%S"),sep=""),"\n",file=filename,append=TRUE)
+  cat(paste("#Total Presentations: ", sum(res$n,na.rm=TRUE),sep=""),"\n",file=filename,append=TRUE)
+  cat(paste("#FP errors: ",sum(res$fpc,na.rm=TRUE),"/",length(res$fpc)," (",signif(sum(res$fpc,na.rm=TRUE)/length(res$fpc)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
+  cat(paste("#FN errors: ",sum(res$fnc,na.rm=TRUE),"/",length(res$fnc)," (",signif(sum(res$fnc,na.rm=TRUE)/length(res$fnc)*100,digits=3),"%)",sep=""), "\n",file=filename,append=TRUE)
  
   cat("\n#Location status (number of stimuli not seen)\n", file=filename, append=TRUE)
   write.table(expandVal(res$tr, finalVal), file=filename, append=TRUE,row.names=FALSE,col.names=FALSE,sep=",")
@@ -96,12 +96,12 @@ writeFile2 <- function (directory,details,res, finalVal){
                        Eye = ifelse(details$eye == "right","RE","LE"),
                        Date = details$date,
                        Time = details$startTime,
-                       Test_Duration = format(.POSIXct(difftime(res$terminate,commence,units="secs") - timePaused),"%M:%S"),
+                       Test_Duration = format(.POSIXct(sum(res$testTime)),"%M:%S"),
                        Presentations = sum(res$n,na.rm=TRUE),
-                       FP_seen = sum(res$fp_counter,na.rm=TRUE),
-                       FP_total = length(res$fp_counter),
-                       FN_missed = sum(res$fn_counter,na.rm=TRUE),
-                       FN_total = length(res$fn_counter))
+                       FP_seen = sum(res$fpc,na.rm=TRUE),
+                       FP_total = length(res$fpc),
+                       FN_missed = sum(res$fnc,na.rm=TRUE),
+                       FN_total = length(res$fnc))
   
   output <- cbind(output,vals)
   
@@ -115,12 +115,12 @@ writeFile2 <- function (directory,details,res, finalVal){
 ###########################################################################################
 # Function which writes a .csv file in a format that can be used in the "visualFields"
 # package and creates printout using visualFields package
-#
+# see vfobject help for required fields
 ###########################################################################################
-writeFile3 <- function (directory,details,res,finalVal){
+writeFile3 <- function (directory,details,res,finalVal,grid){
   filename <- file.path(directory, paste0(details$dx,"_",details$gridType,"_Grid_Size_",details$stimSizeRoman,"_vfPackage.csv")) 
-
-  pattern <- "pPTv"  
+  grids <- c("Screening_P-Total", "Screening_P-Central26", "Screening_P-Peripheral")
+  pattern <- c("pPTv", "pPC26v", "pPeriv")[grids == grid]  
   output <- data.frame(id=details$name,
                        tperimetry = "sap",
                        talgorithm = "suprathreshold",
@@ -130,13 +130,13 @@ writeFile3 <- function (directory,details,res,finalVal){
                        stype = details$dx,
                        sage = details$age,
                        seye = ifelse(details$eye == "right","OD","OS"),
-                       sbsx = 15,
-                       sbsy = -1,
-                       sfp = round(sum(res$fp_counter,na.rm=TRUE)/length(res$fp_counter),digits=2), 
-                       sfn = round(sum(res$fn_counter,na.rm=TRUE)/length(res$fn_counter),digits=2),
+                       sbsx = ifelse(details$eye == "right", 15, -15),
+                       sbsy = -2,
+                       sfp = round(sum(res$fpc,na.rm=TRUE)/length(res$fpc),digits=2), 
+                       sfn = round(sum(res$fnc,na.rm=TRUE)/length(res$fnc),digits=2),
                        sfl = 0,
-                       sduration = format(.POSIXct(difftime(res$terminate,commence,units="secs") - timePaused,tz="GMT"),"%H:%M:%S"),
-                       spause = format(.POSIXct(timePaused,tz="GMT"),"%H:%M:%S"),
+                       sduration = format(.POSIXct(sum(res$testTime),tz="GMT"),"%H:%M:%S"),
+                       spause = format(.POSIXct(sum(res$tp),tz="GMT"),"%H:%M:%S"),
                        # fovth = ifelse(!is.null(z$thFovea),round(z$thFovea),NA),
                        np = sum(res$n,na.rm=TRUE),
                        # outnp = sum(unlist(z$npOutliers),na.rm=TRUE),
